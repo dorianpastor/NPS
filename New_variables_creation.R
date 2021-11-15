@@ -3,7 +3,11 @@ getwd()
 DATA = read.table('kc_house_data.csv', header=TRUE, sep=',')
 attach(DATA)
 
+library(pastecs)
+summary_df <- stat.desc(DATA)
 
+
+model0 = lm(price~., data=DATA[,4:21])
 # Modifica dataset/creazioni nuove variabili:
 which(yr_built==2015)
 which(yr_renovated==2015)
@@ -160,3 +164,8 @@ new_dataset = cbind(DATA,left_date,ordinal_date,bedr_bathr_ratio,log_bedbathrati
                     Geo_dist_index,sqm_living15,log_sqmliving15,sqm_lot15)
 
 write.table(new_dataset, "house_data.txt", sep = " ")
+
+
+model1 = lm(price~., data=new_dataset[,4:39])
+summary(model0) # R2adj = 0.6995
+summary(model1)
