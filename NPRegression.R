@@ -1,5 +1,4 @@
 library(dplyr)
-price = read.table('kc_house_data.csv', header=TRUE, sep=',')$price
 df = read.table('house_data_1511.txt', header=TRUE, sep=' ')
 attach(df)
 
