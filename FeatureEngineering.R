@@ -43,9 +43,12 @@ DATA$renovate_index =  c(ifelse(yr_renovated==0,DATA$yr_old,2015-yr_renovated))
 DATA$has_ren = as.integer(as.logical(yr_renovated!=0))  # If it was renovated
 DATA$has_bas = as.integer(as.logical(sqft_basement!=0))  # If it has basement, since many don't have it
 DATA$ord_date = ordinal_date  # To take into account the market evolution
+DATA$geo_dist = Geo_dist_index
 # Delete
 DATA = subset(DATA, select=-c(yr_built,yr_renovated,sqft_above,sqft_basement,sqft_living,sqft_living15,sqft_lot,sqft_lot15)) # Drop useless columns
 
 df = subset(DATA, select=-c(id,date,price)) # Drop useless columns.
-mod = lm(price~., data=df) # R2adj = 0.7007
+mod = lm(price~., data=df) # R2adj = 0.7367
 summary(mod)
+
+write.table(df, "house_data_1511.txt", sep = " ")
