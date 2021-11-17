@@ -58,11 +58,11 @@ write.table(cbind(df,price), "house_data_1511.txt", sep = " ")
 library(PerformanceAnalytics)
 keep = c("sqm_above", "sqm_basement", "sqm_living", "sqm_living15", "sqm_lot",
          "sqm_lot15", "yr_old", "renovate_index", "geo_dist","price") # grade looks like a parabola
-smaller_df = df[sample(nrow(df), 1000), which(colnames(df) %in% keep)]
+smaller_df = df[sample(nrow(df), 10000), which(colnames(df) %in% keep)]
 chart.Correlation(smaller_df, histogram = TRUE, method = "pearson")
 
 
-install.packages("psych")
+#install.packages("psych") # This package is more elaborated and slower
 library(psych)
 pairs.panels(smaller_df,
              smooth = TRUE,      # If TRUE, draws loess smooths
@@ -79,3 +79,6 @@ pairs.panels(smaller_df,
              stars = TRUE,       # If TRUE, adds significance level with stars
              ci = TRUE)          # If TRUE, adds confidence intervals
 corPlot(df, cex = 0.66)
+corPlot(smaller_df, cex = 0.66, stars=TRUE, symmetric=FALSE)
+
+
