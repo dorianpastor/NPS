@@ -106,7 +106,7 @@ vars = keep#[i]
 par(mfrow=c(1,1))
 for (i in 1:length(vars)){
   var = as.numeric(unlist(df[vars[i]]))
-  m_cut = lm(price~cut(var, breaks=1))
+  m_cut = lm(price~cut(var, breaks=2))
   summary(m_cut)
   var.grid=with(df, seq(range(var)[1],range(var)[2],by=10))
   preds=predict(m_cut,list(var=var.grid),se=T)
