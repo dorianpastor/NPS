@@ -158,10 +158,16 @@ Geo_dist_index = geodist(lat,long)
 plot(Geo_dist_index) # non particolarmente rilevante per e ultime 2000 unit?
 
 DATA = DATA[,1:21]
-new_dataset = cbind(DATA,left_date,ordinal_date,bedr_bathr_ratio,log_bedbathratio,
-                    sqm_living,log_sqm_living,sqm_lot,living_lot_ratio,log_total_sqm,
-                    sqm_above,sqm_basement,yr_old,yr_last_ren,renovate_index,
-                    Geo_dist_index,sqm_living15,log_sqmliving15,sqm_lot15)
+new_dataset = cbind(DATA,
+                    bedr_bathr_ratio, # interesting
+                    log_bedbathratio, # no sense
+                    living_lot_ratio, # think about it
+                    log_total_sqm,   # I would discard this but we need price per sqm to pop up somewhere(?)..
+                    sqm_living,log_sqm_living, # we got all these and the following
+                    sqm_lot,sqm_above,sqm_basement,
+                    yr_old,yr_last_ren,renovate_index,
+                    left_date,ordinal_date,Geo_dist_index,
+                    sqm_living15,log_sqmliving15,sqm_lot15)
 
 write.table(new_dataset, "house_data.txt", sep = " ")
 

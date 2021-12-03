@@ -468,8 +468,8 @@ boxplot(ordinal_date)
 # DATA WRANGLING
 #################################################################
 # Adding new variables
-# Not added for now: ordinal_date, bedr_bathr_ratio, log_bedbathratio, living_lot_ratio
-# log_total_sqm, yr_last_ren (NAs... maybe categorical, renovated yes/no?)
+# Not added for now, but to consider: bedr_bathr_ratio, living_lot_ratio, log_total_sqm
+
 # Replace
 DATA$sqm_living = round(sqft_living*sqft_to_sqm)
 DATA$sqm_lot = round(sqft_lot*sqft_to_sqm)
@@ -484,7 +484,6 @@ DATA$renovate_index =  c(ifelse(yr_renovated==0,DATA$yr_old,2015-yr_renovated))
 DATA$has_ren = as.integer(as.logical(yr_renovated!=0))  # If it was renovated
 DATA$has_bas = as.integer(as.logical(sqft_basement!=0))  # If it has basement, since many don't have it
 DATA$ord_date = ordinal_date  # To take into account the market evolution
-
 DATA <- cbind(DATA,log10(price),bathfloors_ratio,log10(sqm_living),log10(sqm_lot),log10(sqm_living15),log10(sqm_lot15),geodist_index)
 # Delete
 DATA = subset(DATA, select=-c(sqft_above,sqft_basement,sqft_living,sqft_living15,sqft_lot,sqft_lot15)) # Drop useless columns
