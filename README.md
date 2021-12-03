@@ -1,5 +1,6 @@
 # King County Home Sales
 useful links: 
+
 https://rstudio-pubs-static.s3.amazonaws.com/155304_cc51f448116744069664b35e7762999f.html
 https://rpubs.com/grmerrell/154461
 
