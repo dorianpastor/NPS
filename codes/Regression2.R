@@ -90,5 +90,36 @@ for (i in 1:length(cols)){
 }
 dev.off()
 
+library(np)
+# source https://bookdown.org/egarpor/NP-UC3M/kre-ii-multmix.html
+df = read.csv("kc_cleaned.csv")
+df_red = sample_n(df, 10)
+df_red = df_red[c(cols,"log10.price.","has_ren","has_bas","waterfront")]
+attach(df_red)
+bw_wine <- np::npregbw(formula = log10.price. ~
+                         ordered(bedrooms)+ordered(bathrooms)+ordered(bedfloors_ratio)
+                       +ordered(bathfloors_ratio)+ordered(floors)+factor(waterfront)+ordered(view)+geodist_index+
+                       ordered(condition)+ordered(grade)+yr_old+renovate_index+factor(has_ren)+factor(has_bas)+
+                         ord_date+log10.sqm_living.+log10.sqm_lot.+log10.sqm_living15.+log10.sqm_lot15., 
+                       data=df_red, 
+                       regtype = "lc")
 
-#var.grid=with(df, seq(range(var)[1],range(var)[2],length.out=100))
+
+# "bedrooms"  "bathrooms" "bedfloors_ratio" bathfloors_ratio" "floors"  "waterfront"  "view" "geodist_index"           
+# "condition" "grade" "yr_old"  "renovate_index"  "has_ren" "has_bas" "ord_date"
+# "log10.sqm_living."  "log10.sqm_lot."  "log10.sqm_living15."  "log10.sqm_lot15."
+
+bw_wine
+## Regression Type: ll = Local-Linear, lc = Local-Constant
+
+# Regression
+fit_wine <- np::npreg(bw_wine)
+summary(fit_wine)
+
+# Plot the "marginal effects of each predictor" on the response
+par(mar=c(1,1,1,1))
+plot(fit_wine)
+
+
+
+#####################################################################################
