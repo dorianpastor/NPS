@@ -101,16 +101,25 @@ df_red = sample_n(df, 10)   # Extremely heavy, computationally
 df_red = df_red[c(cols,"log10.price.","has_ren","has_bas","waterfront")]
 attach(df_red)
 # Model with all variables (to be reduced)
-bw_wine <- np::npregbw(formula = log10.price. ~
-                         ordered(bedrooms)+ordered(bathrooms)+ordered(bedfloors_ratio)
-                       +ordered(bathfloors_ratio)+ordered(floors)+factor(waterfront)+ordered(view)+geodist_index+
-                       ordered(condition)+ordered(grade)+yr_old+renovate_index+factor(has_ren)+factor(has_bas)+
-                         ord_date+log10.sqm_living.+log10.sqm_lot.+log10.sqm_living15.+log10.sqm_lot15., 
-                       data=df_red, 
-                       regtype = "lc")
+#bw_wine <- np::npregbw(formula = log10.price. ~
+#                         ordered(bedrooms)+ordered(bathrooms)+ordered(bedfloors_ratio)
+#                       +ordered(bathfloors_ratio)+ordered(floors)+factor(waterfront)+ordered(view)+geodist_index+
+#                       ordered(condition)+grade+yr_old+renovate_index+factor(has_ren)+factor(has_bas)+
+#                         ord_date+log10.sqm_living.+log10.sqm_lot.+log10.sqm_living15.+log10.sqm_lot15., 
+#                       data=df_red, 
+#                       regtype = "lc")
+# We can also use xdat, ydat to set regressors and response
 
-bw_wine
-## Regression Type: ll = Local-Linear, lc = Local-Constant
+# Bandwidth selection☺
+bw_wine <- np::npregbw(formula = log10.price. ~ grade + log10.sqm_living.,
+                       data=df_red, 
+                       regtype = "lc",
+                       ckerorder = 2,
+                       ckertype = "gaussian" )
+# ckerorder: kernel order 2 (default),4,6,8 
+# ckertype: gaussian (default), epanechnikov, or uniform
+# Regr Type: ll = Local-Linear, lc = Local-Constant
+summary(bw_wine)
 
 # Regression
 fit_wine <- np::npreg(bw_wine)
@@ -121,3 +130,5 @@ par(mar=c(1,1,1,1))
 plot(fit_wine)
 
 #####################################################################################
+# idea variables with few values could modelled with Poisson, binomial 
+# and negative binomial regression. See if this is possible with a gam
