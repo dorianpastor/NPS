@@ -499,9 +499,9 @@ DATA = subset(DATA, select=-c(sqft_above,sqft_basement,sqft_living,sqft_living15
 
 # Insert here all the column-couples to put in the bivariate bagplot
 coll_columns = rbind(c("bedrooms","log10(price)"),c("bathrooms","log10(price)"),
-                     c("bedfloors_ratio","log10(price)"), c("bathfloors_ratio","log10(price)"),
-                     c("log10(sqm_living)","log10(price)"),c("log10(sqm_lot)","log10(price)"),
-                     c("geodist_index","log10(price)"))
+                     c("bathfloors_ratio","log10(price)"),c("bedfloors_ratio","log10(price)"),
+                     c("log10(sqm_living)","log10(price)"),
+                     c("geodist_index","log10(price)"),c("log10(sqm_lot)","log10(price)"))
 conta = 0  # Here I will count how many outliers we have
 indexes = c()  # Here I will save all the indexes to discard
 for (j in 1:dim(coll_columns)[1]){  # Iterate over all column-couples                
@@ -510,7 +510,7 @@ for (j in 1:dim(coll_columns)[1]){  # Iterate over all column-couples
   out = distinct(data.frame(bagplot(DATA[columns])$pxy.outlier))  # distinct to remove duplicates
   for (i in 1:dim(out)[1]){  # it can be optimized: loop to search for the outlier in the whole dataset
     row = out[i,]
-    get_idx = which(DATA[columns[1]]==as.integer(row["x"]) & DATA[columns[2]]==as.numeric(row["y"]))  # get the indexes where the outlier is found
+    get_idx = which(DATA[columns[1]]==as.numeric(row["x"]) & DATA[columns[2]]==as.numeric(row["y"]))  # get the indexes where the outlier is found
     count_indexes = length(indexes)
     indexes = union(indexes,get_idx)
     conta = conta + length(indexes) - count_indexes
