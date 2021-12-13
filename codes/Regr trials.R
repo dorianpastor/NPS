@@ -168,9 +168,9 @@ attach(DATA)
 keep
 
 resp = log10.price.
-cov = renovate_index
+cov = (bedrooms+bathrooms)/floors
 plot(cov,resp)
-model_spline <- lm(resp ~ bs(cov, knots=100, degree=3)) # . : degree delle spline (magari 3)
+model_spline <- lm(resp ~ bs(cov, knots=100, degree=1)) # . : degree delle spline (magari 3)
 #  model_spline <- lm(resp ~ bs(cov, ,degree=., df = .)) # . : df = degree + #knots.
 cov_grid = seq(range(cov)[1],range(cov)[2], length.out=100)
 preds=predict(model_spline,list(cov=cov_grid),se=T)
@@ -212,9 +212,66 @@ legend("topleft ",legend=c("CV", "GCV"),col=c("red", "blue"), lty=1:2, cex=0.8)
 mod = lm(resp ~ log(sqm_living,10) + log(sqm_above,10))
 summary(mod)
 
-#####
-#other stuff
-# smoothing spline with With hand-tuning
-#fit_smooth_spline <- with(df, smooth.spline(var,price,df=DF))  # can also specify smoothing par: lambda = 1e-1
-#with(df, plot(var ,price, cex =.5, col =" darkgrey "))
-#lines(fit_smooth_spline,col="blue",lwd=2)
+#GAMMM:
+
+with(df, scatterplotMatrix(data.frame(log10.price.,log10.sqm_living., geodist_index)))
+#hist(log_sqm_living)
+hist(log(geodist_index,10))
+
+resp = log10.price.
+cov1 = log10.sqm_living.
+cov2 = geodist_index
+model_lm=lm(resp ~ cov1 + cov2)
+summary(model_lm)
+
+cov1.grid=seq(range(cov1)[1],range(cov1)[2],length.out = 100)
+cov2.grid=seq(range(cov2)[1],range(cov2)[2],length.out = 100)
+grid=expand.grid(cov1.grid,cov2.grid)
+names(grid)=c('cov1','cov2') #nomi delle covariate
+pred=predict(model_lm,newdata=grid)
+persp3d(cov1.grid,cov2.grid,pred,col='blue',border="black",lwd=0.3)
+points3d(cov1,cov2,resp,col='black',size=5)
+
+model_lm_interaction <- lm(resp ~ cov1 + cov2 + cov1:cov2) 
+# model_lm_interaction <- lm(resp ~ cov1 * cov2) # alternatively 
+summary(model_lm_interaction)
+pred_interaction=predict(model_lm_interaction,newdata=grid)
+persp3d(cov1.grid,cov2.grid,pred_interaction,col='grey30')
+points3d(cov1,cov2,resp,col='black',size=5)
+
+model_gam=gam(resp ~ s(cov1,bs='cr') + s(cov2,bs='cr'))
+summary(model_gam)
+hist(model_gam$residuals)
+qqnorm(model_gam$residuals)
+#shapiro.test(model_gam$residuals)
+resid5000 = sample(model_gam$residuals)[1:5000]  #problema con geodist_index che è mega poco simmetrico
+shapiro.test(resid5000)
+plot(model_gam)
+
+model_gam_ns <-  lm(resp ~ ns(cov1, df = 3) + bs(cov2, knots = 100, degree = 3) ) #try using bs instead of ns.
+summary(model_gam_ns)
+#hist(model_gam_ns$residuals)
+#qqnorm(model_gam_ns$residuals)
+#shapiro.test(model_gam_ns$residuals)
+par(mfrow=c(1,2))
+gam::plot.Gam(model_gam_ns, se=TRUE)
+
+# plot(model_gam_ns$residuals,model_gam$residuals)
+# cor(model_gam_ns$residuals,model_gam$residuals)
+
+model_gam_reduced=gam(resp ~ cov2 + s(cov1,bs='cr')) #example
+summary(model_gam_reduced)
+
+anova(model_gam_reduced,model_gam, test = "F") # se p-value piccolo => rigetto il reduced.
+
+pred_gam=predict(model_gam,newdata=grid)
+
+persp3d(cov1.grid,cov2.grid,pred_gam,col='grey30')
+points3d(cov1,cov2,resp,col='black',size=5))
+
+model_gam_inter = gam(resp ~ s(cov1, bs = 'cr') + s(cov2, bs ='cr') + s(I(cov1 * cov2), bs = 'cr'))
+# model_gam_inter=gam(resp ~ s(cov1,bs='cr') + s(cov2,bs='cr')+ s(cov1,cov2,bs='tp'),data = Prestige) # thin plate spline
+pred_inter = predict(model_gam_inter, newdata = data.frame(grid, inter = grid$cov1 * grid$cov2))
+
+persp3d(education.grid, income.grid, pred_inter, col = 'grey30')
+points3d(cov1, cov2, resp, col = 'black', size = 5))
