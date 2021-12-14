@@ -9,7 +9,7 @@ seed = 26111992
 house_ = house[c(3:16,20:21,26:33,35:39)]
 
 
-#Idea: permutational test per valutare price (considero la radice), sqm_living 
+#IDEA: permutational test per valutare price (considero la radice), sqm_living 
 #e sqm_lot tra e 5k case pi? vecchie e le 5k più nuove o più recentemente rinnovate
 
 cleaning=house_
@@ -46,14 +46,11 @@ t2$sqm_living=as.numeric(t2$sqm_living)
 t2$sqm_lot=as.numeric(t2$sqm_lot)
 
 #sostituisco il prezzo con la sua radice
-t1$price=sqrt(t1$price)
-t2$price=sqrt(t2$price)
+t1$price=log10(t1$price)
+t2$price=log10(t2$price)
 
 library(rgl)
-open3d() 
 
-plot3d(t1-t2, size=3, col='orange', aspect = F)  #schifo
-points3d(0,0,0, size=6)
 
 p  <- dim(t1)[2]
 n1 <- dim(t1)[1]
@@ -102,7 +99,7 @@ abline(v=T20,col=3,lwd=4)
 
 # p-value
 p_val <- sum(T2>=T20)/B
-p_val  #0.00181
+p_val  #0.0023
 
 # try malhanobis distance
 T20 <- as.numeric( (diff.mean-delta.0) %*% solve(diag(diag(diff.cov))) %*% (diff.mean-delta.0))
@@ -166,3 +163,59 @@ abline(v=T20,col=3,lwd=4)
 
 p_val <- sum(T2>=T20)/B
 p_val #0
+
+
+# TEST TRA LOGPREZZO E GEODIST
+
+attach(kc_cleaned)
+plot(kc_cleaned$geodist_index,kc_cleaned$`log10(price)`)
+#già dal grafico si potrebbe intuire che più ci troviamo vicini al centro, più i prezzi saranno alti
+
+#Divido dataset in 3 parti in base alla distanza (breve,media,lunga)
+i1=which(kc_cleaned$geodist_index<10)
+i2=which(kc_cleaned$geodist_index>10 & kc_cleaned$geodist_index<20)
+i3=which(kc_cleaned$geodist_index>=20)
+
+n1 <- length(i1)
+n2 <- length(i2)
+n3 <- length(i3)
+n  <- n1+n2+n3
+v=vector(mode = "logical", length = n)
+v[i1]="short"
+v[i2]="medium"
+v[i3]="long"
+v=as.factor(v)
+new_kc_cleaned=cbind(kc_cleaned,v)
+colnames(new_kc_cleaned)[35]="distance"
+g <- nlevels(new_kc_cleaned$distance)
+plot(new_kc_cleaned$distance, new_kc_cleaned$`log10(price)`, xlab='treat',col=rainbow(g),main='Original Data')
+
+fit <- aov(new_kc_cleaned$`log10(price)` ~ new_kc_cleaned$distance)
+summary(fit)
+
+T0 <- summary(fit)[[1]][1,4]
+T0
+
+T_stat <- numeric(B) 
+
+for(perm in 1:B){
+  # Permutation:
+  permutation <- sample(1:n)
+  log10price_perm <- new_kc_cleaned$`log10(price)`[permutation]
+  fit_perm <- aov(log10price_perm ~ new_kc_cleaned$distance)
+  
+  # Test statistic:
+  T_stat[perm] <- summary(fit_perm)[[1]][1,4]
+}
+
+hist(T_stat,xlim=range(c(T_stat,T0)),breaks=30)
+abline(v=T0,col=3,lwd=2)
+
+plot(ecdf(T_stat),xlim=c(-1,20))
+abline(v=T0,col=3,lwd=4)
+
+p_val <- sum(T_stat>=T0)/B
+p_val  #0
+
+
+# TEST TRA
