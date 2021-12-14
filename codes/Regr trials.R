@@ -6,16 +6,18 @@ attach(DATA)
 df = DATA
 
 keep = c("sqm_above", "sqm_basement", "sqm_living", "sqm_living15", "sqm_lot",
-         "sqm_lot15", "yr_old", "renovate_index", "geodist_index", "bathfloors_ratio", "waterfront", "floors","condition") # grade looks like a parabola
+         "sqm_lot15", "yr_old", "renovate_index", "geodist_index", "bathfloors_ratio", 
+         "waterfront", "floors","condition","grade") # grade looks like a parabola
 
 par(mfrow=c(3,3))
 par(mar=c(1,1,1,1))
 for (i in keep){
   colnum <- which(colnames(df) %in% i)
-  plot(df[,colnum],price,  main = i)
+  plot(df[,colnum],log10.price.,  main = i)
 }
 
 # Univariate against price to think of a step as a consequence
+# This part should be remade with log10.price.
 #--------------------------------------------------------------------------
 mod = lm(price~sqm_above)
 summary(mod)
@@ -98,10 +100,10 @@ vars = keep #[i]
 #par(mar=c(1,1,1,1))
 par(mfrow=c(1,1))
 
-  i = 1
+  i = 4
   var = as.numeric(unlist(df[vars[i]]))
   plot(var,log10.price.)
-  plot(var, price)
+  #plot(var, price)
   m_cut = lm(log10.price.~cut(var, breaks=3))
   summary(m_cut)
   var.grid=with(df, seq(range(var)[1],range(var)[2],length.out=100))
@@ -123,6 +125,9 @@ library(car)
 library(np)
 library(splines)
 library(fda)
+library(mgcv)
+library(rgl)
+library(pbapply)
 
 vars = keep
 FRAC = 5 # it means I use a N/FRAC of the total points for the local averaging
@@ -244,9 +249,10 @@ summary(model_gam)
 hist(model_gam$residuals)
 qqnorm(model_gam$residuals)
 #shapiro.test(model_gam$residuals)
-resid5000 = sample(model_gam$residuals)[1:5000]  #problema con geodist_index che è mega poco simmetrico
+resid5000 = sample(model_gam$residuals)[1:5000]  #problema con geodist_index che ? mega poco simmetrico
 shapiro.test(resid5000)
 plot(model_gam)
+points(log10.price.)
 
 model_gam_ns <-  lm(resp ~ ns(cov1, df = 3) + bs(cov2, knots = 100, degree = 3) ) #try using bs instead of ns.
 summary(model_gam_ns)
@@ -275,3 +281,6 @@ pred_inter = predict(model_gam_inter, newdata = data.frame(grid, inter = grid$co
 
 persp3d(education.grid, income.grid, pred_inter, col = 'grey30')
 points3d(cov1, cov2, resp, col = 'black', size = 5))
+
+
+# s smoothing spline (set the type cr for cubic), ns natural spline (set the df), bs b-spline (set the degree)
