@@ -9,8 +9,8 @@ seed = 26111992
 house_ = house[c(3:16,20:21,26:33,35:39)]
 
 
-#IDEA: permutational test per valutare price (considero la radice), sqm_living 
-#e sqm_lot tra e 5k case pi? vecchie e le 5k più nuove o più recentemente rinnovate
+#IDEA: permutational test per valutare price (considero log10(price)), sqm_living 
+#e sqm_lot tra e 5k case piu vecchie e le 5k più nuove o più recentemente rinnovate
 
 cleaning=house_
 cleaning=tibble::rowid_to_column(cleaning, "ID")
@@ -166,7 +166,7 @@ p_val #0
 
 
 # TEST TRA LOGPREZZO E GEODIST
-
+B=1000
 attach(kc_cleaned)
 plot(kc_cleaned$geodist_index,kc_cleaned$`log10(price)`)
 #già dal grafico si potrebbe intuire che più ci troviamo vicini al centro, più i prezzi saranno alti
