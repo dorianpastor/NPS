@@ -111,9 +111,9 @@ attach(df_red)
 # We can also use xdat, ydat to set regressors and response
 
 # Bandwidth selection☺
-bw_wine <- np::npregbw(formula = log10.price. ~ grade + log10.sqm_living.,
+bw_wine <- np::npregbw(formula = log10.price. ~ grade + log10.sqm_living.+geodist_index+renovate_index,
                        data=df_red, 
-                       regtype = "lc",
+                       regtype = "ll",
                        ckerorder = 2,
                        ckertype = "gaussian" )
 # ckerorder: kernel order 2 (default),4,6,8 
