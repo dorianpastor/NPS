@@ -95,9 +95,10 @@ dev.off()
 # MULTIVARIATE KERNEL REGRESSION
 ################################################################################
 library(np)
+library(dplyr)
 # source https://bookdown.org/egarpor/NP-UC3M/kre-ii-multmix.html
 df = read.csv("kc_cleaned.csv")
-df_red = sample_n(df, 10)   # Extremely heavy, computationally
+df_red = sample_n(df, 8000)   # Extremely heavy, computationally
 df_red = df_red[c(cols,"log10.price.","has_ren","has_bas","waterfront")]
 attach(df_red)
 # Model with all variables (to be reduced)
@@ -127,7 +128,7 @@ summary(fit_wine)
 
 # Plot the "marginal effects of each predictor" on the response
 par(mar=c(1,1,1,1))
-plot(fit_wine)
+plot(fit_wine, plot.behavior = "plot-data")
 
 #####################################################################################
 # idea variables with few values could modelled with Poisson, binomial 

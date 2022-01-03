@@ -15,7 +15,7 @@ DATA<-read.csv("kc_house_data.csv", header=TRUE, sep=",")
 n <- dim(DATA)[1]
 attach(DATA)
 
-
+pdf(file = NULL)
 #################################################################
 # EXPLORATORY DATA ANALYSIS
 #################################################################
@@ -462,7 +462,7 @@ hist(ordinal_date,main = 'distribution of occurencies',prob=T)
 boxplot(ordinal_date)
 #it appears completely useless
 
-
+dev.off()
 
 #################################################################
 # DATA WRANGLING
