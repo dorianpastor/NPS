@@ -133,3 +133,21 @@ plot(fit_wine, plot.behavior = "plot-data")
 #####################################################################################
 # idea variables with few values could modelled with Poisson, binomial 
 # and negative binomial regression. See if this is possible with a gam
+
+#prova covMCD-bad - Too heavy
+library(robustbase)
+
+keep = c("grade","yr_old","renovate_index","log10.price.","log10.sqm_living.","log10.sqm_lot.","log10.sqm_living15."
+         ,"log10.sqm_lot15.","geodist_index")
+
+df_red = sample_n(df, 2000)
+keep = c("geodist_index","log10.price.")
+fit_MCD <- covMcd(x = df_red[,keep], alpha = .95, nsamp = "deterministic")  #alpha, adetermines the size of the subsets used for parameter estimation
+plot(fit_MCD,classic=TRUE)
+ind_best_subset <- fit_MCD$best
+N <- nrow(df_red); p <- ncol(df)
+dev.off()
+par(mar=c(1,1,1,1))
+x11()
+plot(df_red, col=ifelse(1:N%in%ind_best_subset,"black","red"),pch=19)
+

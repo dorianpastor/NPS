@@ -7,7 +7,6 @@ library(gam)
 library(plot3D)
 library(lme4)
 library(nlme)
-library(packagefinder)
 library(aplpack)
 library(robustbase)
 
@@ -493,7 +492,7 @@ DATA = subset(DATA, select=-c(sqft_above,sqft_basement,sqft_living,sqft_living15
 #################################################################
 #OUTLIERS DETECTION
 #################################################################
-#Variabili da usare nell'outliers detection: log10(price), bedrooms, bathrooms, 
+# Variabili da usare nell'outliers detection: log10(price), bedrooms, bathrooms, 
 # bathfloors_ratio, bedfloors_ratio, log10(sqm_living), log10(sqm_lot), geodist_index
 # More to try..
 
