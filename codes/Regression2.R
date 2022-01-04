@@ -1,7 +1,10 @@
 library(dplyr)
 library(MASS)
+library(Metrics)
+
 df = read.csv("kc_cleaned.csv")
 attach(df)
+
 # "id"  "date"  "price" "zipcode" "lat" "long"  "yr_built"  "yr_renovated"
 # "sqm_living"   "sqm_lot"   "sqm_above"   "sqm_basement"   "sqm_living15"   "sqm_lot15" 
 # "bedrooms"  "bathrooms" "bedfloors_ratio" bathfloors_ratio" "floors"  "waterfront"  "view" "geodist_index"           
@@ -10,13 +13,46 @@ attach(df)
 # "log10.price." 
 
 # Useless: "id", "date", "yr_built", "yr_renov", "zipcode", "lat", "long", "price"
-# We use the logs of "sqm_living", "sqm_lot", "sqm_above", "sqm_basement" instead of the originals
+# We use the logs of "sqm_living", "sqm_lot", "sqm_living15", "sqm_lot15" instead of the originals
 
 # Target: "log10.price."
 
+#############################################################################
+# Define functions
+#############################################################################
+
+train_test_split <- function(df, perc_train = 0.8){
+train_ind <- sample(seq_len(nrow(df)), size = perc_train*nrow(df))
+  train <- df[train_ind, ]
+  test <- df[-train_ind, ]
+  return(list(train=train, test=test))
+}
+
+eval_regr <- function(model, test, type="mape"){
+  predictors = labels(terms(model))
+  y_test = test$log10.price.
+  x_test = test[,predictors]
+  y_pred = predict(model,x_test)
+  if (type=="mape"){
+    error = mape(y_test, y_pred) # rmse, mse .. 
+    print(paste("Mean Absolute Percentage Error is", 100*error, "%"))
+    error
+  }
+  else{
+    print("Not implemented")
+  }
+}
 
 #############################################################################
-# UNIDIMENSIONAL
+# Split train and test
+#############################################################################
+
+split = train_test_split(df)
+train = split$train
+test = split$test
+
+#############################################################################
+# UNIDIMENSIONAL REGRESSION
 #############################################################################
 # source http://users.stat.umn.edu/~helwig/notes/smooth-notes.html#example-1-prestige-from-income
 
@@ -131,6 +167,8 @@ par(mar=c(1,1,1,1))
 plot(fit_wine, plot.behavior = "plot-data")
 
 #####################################################################################
+# PROVE
+#####################################################################################
 # idea variables with few values could modelled with Poisson, binomial 
 # and negative binomial regression. See if this is possible with a gam
 
@@ -151,3 +189,79 @@ par(mar=c(1,1,1,1))
 x11()
 plot(df_red, col=ifelse(1:N%in%ind_best_subset,"black","red"),pch=19)
 
+#PROVA PCA
+
+tourists = df[c(4:10,14,15,18,19,22:26,28:34)]
+tourists = df[c(4:26,28:34)]
+
+tourists.sd <- scale(tourists) #+++
+tourists.sd <- data.frame(tourists.sd)
+
+head(tourists.sd)
+
+pc.tourists <- princomp(tourists.sd, scores=T)
+pc.tourists
+summary(pc.tourists)
+
+# To obtain the rows of the summary: 
+pc.tourists$sd  # standard deviation of the components
+pc.tourists$sd^2/sum(pc.tourists$sd^2) # proportion of variance explained by each PC
+cumsum(pc.tourists$sd^2)/sum(pc.tourists$sd^2) # cumulative proportion of explained variance
+
+# loadings (recall: coefficients of the linear combination of the original variables that defines each principal component)
+load.tour <- pc.tourists$loadings #in ogni colonna vedi per cosa moltiplicare le features per ottenere la componente i (una PC per colonna)
+x11() # graphical representation of the loadings of the first six principal components! bello
+par(mfcol = c(2,2))
+for(i in 1:4) barplot(load.tour[,i], ylim = c(-1, 1), main=paste("PC",i))
+
+
+# Explained variance plots!
+x11()
+layout(matrix(c(2,3,1,3),2,byrow=T))
+plot(pc.tourists, las=2, main='Principal components', ylim=c(0,4.5e7))
+barplot(sapply(tourists,sd)^2, las=2, main='Original Variables', ylim=c(0,4.5e7), ylab='Variances')
+plot(cumsum(pc.tourists$sd^2)/sum(pc.tourists$sd^2), type='b', axes=F, xlab='number of components', 
+     ylab='contribution to the total variance', ylim=c(0,1))
+abline(h=1, col='blue')
+abline(h=0.8, lty=2, col='blue')
+box()
+axis(2,at=0:10/10,labels=0:10/10)
+axis(1,at=1:ncol(tourists),labels=1:ncol(tourists),las=2)
+
+# scores
+scores.tourists <- pc.tourists$scores
+x11()
+plot(scores.tourists[,1:2])
+abline(h=0, v=0, lty=2, col='grey') 
+
+#confronto boxplot var iniziali vs PCs
+x11()
+layout(matrix(c(1,2),2))
+boxplot(tourists.sd, las=2, col='gold', main='Standardized variables')
+scores.tourists <- data.frame(scores.tourists)
+boxplot(scores.tourists, las=2, col='gold', main='Principal components') 
+
+#quel grafico complicato con tutte le freccette
+x11()
+biplot(pc.tourists) 
+
+mod1 = lm(df$log10.price.~., data=tourists.sd)
+summary(mod1)
+mod2 = lm(df$log10.price.~., data=scores.tourists[,1:13])
+summary(mod2)
+
+library(MASS)
+library(robustbase)
+attach(tourists)
+fit_lms <- lmsreg(df$log10.price.~., data=tourists)	#least median squares
+plot(df$log10.price.)
+abline(fit_lms, col="red", lwd=2)
+plot(fit_lms)
+summary(fit_lms.coefficients)
+fit_lts <- ltsReg(df$log10.price.~., data=tourists.sd, alpha=.95,mcd=TRUE)	#least trimmed squares
+plot(df$log10.price.)
+abline(fit_lts, col="red", lwd=2)
+plot(fit_lts)
+
+
+eval_regr(fit_lms, test, "mape")
