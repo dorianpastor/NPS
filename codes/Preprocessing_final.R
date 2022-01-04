@@ -1,7 +1,7 @@
 library(DepthProc)
 library(aplpack)
 
-DATA<-read.csv("kc_house_data.csv", header=TRUE, sep=",")
+DATA<-read.csv("../deprecated/kc_house_data.csv", header=TRUE, sep=",")
 attach(DATA)
 
 #################################################################
