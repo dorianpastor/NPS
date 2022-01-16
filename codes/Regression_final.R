@@ -27,24 +27,28 @@ select_columns <- function(...){
 }
 
 eval_regr <- function(model, x_test, y_test, type="mape"){
-  predictors = labels(terms(model))
+  #predictors = labels(terms(model))
   y_pred = predict(model,x_test)
-  if (type=="mape"){
-    error = mape(y_test, y_pred) 
-    print(paste("Mean Absolute Percentage Error is", 100*error, "%"))
+  if (type=="mae"){
+    error = mae(10^y_test, 10^y_pred) 
+    print(paste("Mean Absolute Error is", round(error), "dollars"))
+  }
+  else if (type=="mape"){
+    error = mape(10^y_test, 10^y_pred) 
+    print(paste("Mean Absolute Percentage Error is", round(100*error,2), "%"))
   }
   else if (type=="mse"){
-    error = mse(y_test, y_pred) 
-    print(paste("Mean Squared Error is", error))
+    error = mse(10^y_test, 10^y_pred) 
+    print(paste("Mean Squared Error is", round(error), "dollars^2"))
   }
   else if (type=="rmse"){
-    error = rmse(y_test, y_pred) 
-    print(paste("Root Mean Squared Error is", error))
+    error = rmse(10^y_test, 10^y_pred) 
+    print(paste("Root Mean Squared Error is", round(error), "dollars"))
   }
   else{
     print("Not implemented")
   }
-  return(error)
+  #return(error)
 }
 
 #############################################################################
@@ -77,11 +81,20 @@ useful_sqm = c("log10.sqm_living.","log10.sqm_lot.","log10.sqm_living15.",
 # Multivariate Regressions
 #############################################################################
 
-selector = select_columns(useful_gen,"renovate_index",useful_geo,useful_sqm)
+selector = select_columns(useful_gen[c(-1,-3)],useful_age,useful_geo,useful_sqm)
 X1 = selector$x_train; x_test_1 = selector$x_test
+model_final = lmrob(y_train~ns(bathfloors_ratio, df=2)+
+                      view + grade +
+                      cut(condition,breaks = c(min(condition),3,max(condition)),include.lowest = T, right=F)+
+                      I((yr_old-80)*(yr_old>80)) + yr_old:has_ren + 
+                      bs(geodist_index, degree=2) +
+                      log10.sqm_living. +
+                      log10.sqm_lot.+
+                      log10.sqm_living15.+
+                      log10.sqm_lot15.
+                    ,data=X1
+)  # Using lmrob's MM-type estimator for lm
+summary(model_final)
+eval_regr(model_final,x_test_1,y_test, "mae") # Ignore warning (it's because the test data has geodists that are lower than the minimum found in the train data)
+eval_regr(model_final,x_test_1,y_test, "mape")
 
-fit_lms = lmsreg(y_train~., X1)	 # Least Median Squares
-eval_regr(fit_lms,x_test_1,y_test)
-
-fit_lm = lm(y_train~., X1)	      # OLS
-eval_regr(fit_lm,x_test_1,y_test)

@@ -265,3 +265,16 @@ plot(fit_lts)
 
 
 eval_regr(fit_lms, test, "mape")
+
+
+
+#Model selection - Ignorant approach
+library(caret)
+library(leaps)
+train.control <- trainControl(method = "cv", number = 10)
+step.model <- train(y_train~.,data=cbind(X1,y_train),method = "leapSeq", 
+                    tuneGrid = data.frame(nvmax = 1:11),
+                    trControl = train.control) 
+step.model$results
+step.model$bestTune
+summary(step.model$finalModel)
