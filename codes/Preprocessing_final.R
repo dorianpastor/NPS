@@ -1,3 +1,4 @@
+rm(list=ls())
 library(DepthProc)
 library(aplpack)
 
@@ -63,11 +64,17 @@ geodist <- function(Lat,Lon){
   d <- p*R
   return(d)
 }
+
+# Richest Zipcodes in King's County
+richest = c("98039","98040","98004","98112","98164","98134","98033","98075",
+            "98074","98077","98101","98053","98110","98006","98199")
+# Conversion sqft to sqm
+sqft_to_sqm = 0.09290304
+
 #################################################################
 # VARIABLE CREATION
 #################################################################
 
-sqft_to_sqm = 0.09290304
 sqm_living = sqft_living*sqft_to_sqm
 sqm_living = round(sqm_living)
 sqm_above = sqft_above*sqft_to_sqm
@@ -119,6 +126,7 @@ DATA$renovate_index =  c(ifelse(yr_renovated==0,DATA$yr_old,2015-yr_renovated))
 DATA$has_ren = as.integer(as.logical(yr_renovated!=0))  # If it was renovated
 DATA$has_bas = as.integer(as.logical(sqft_basement!=0))  # If it has basement, since many don't have it
 DATA$ord_date = ordinal_date  # To take into account the market evolution
+DATA$is_rich = as.integer(DATA$zipcode %in% richest)
 DATA <- cbind(DATA,log10(price), bedfloors_ratio, bathfloors_ratio,log10(sqm_living),log10(sqm_lot),log10(sqm_living15),log10(sqm_lot15),geodist_index)
 
 # Delete

@@ -1,12 +1,13 @@
 rm(list=ls())
 library(MASS)
+library(car)
 library(Metrics)
 library(dplyr)
 library(np)
 library(gam)
 library(robustbase)
 
-df = read.csv("kc_cleaned.csv")
+df = read.csv("../kc_cleaned.csv")
 target = "log10.price."
 
 #############################################################################
@@ -71,7 +72,7 @@ useless_sqm = c("sqm_living", "sqm_lot", "sqm_living15", "sqm_lot15", "sqm_above
                 "sqm_basement")
 
 useful_gen = c("bedfloors_ratio", "bathfloors_ratio","ord_date","view","condition",
-               "grade")
+               "grade","is_rich")
 useful_age = c("has_ren", "yr_old")  # either them or renovate_index
 useful_geo = c("geodist_index")
 useful_sqm = c("log10.sqm_living.","log10.sqm_lot.","log10.sqm_living15.",
@@ -91,7 +92,7 @@ model_final = lmrob(y_train~ns(bathfloors_ratio, df=2)+
                       log10.sqm_living. +
                       log10.sqm_lot.+
                       log10.sqm_living15.+
-                      log10.sqm_lot15.
+                      log10.sqm_lot15.+is_rich
                     ,data=X1
 )  # Using lmrob's MM-type estimator for lm
 summary(model_final)
