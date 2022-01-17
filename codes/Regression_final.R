@@ -7,7 +7,7 @@ library(np)
 library(gam)
 library(robustbase)
 
-df = read.csv("../kc_cleaned.csv")
+df = read.csv("kc_cleaned.csv")
 target = "log10.price."
 
 #############################################################################
@@ -98,4 +98,4 @@ model_final = lmrob(y_train~ns(bathfloors_ratio, df=2)+
 summary(model_final)
 eval_regr(model_final,x_test_1,y_test, "mae") # Ignore warning (it's because the test data has geodists that are lower than the minimum found in the train data)
 eval_regr(model_final,x_test_1,y_test, "mape")
-
+plot(model_final)
