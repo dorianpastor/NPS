@@ -2,7 +2,7 @@ library(Hmisc)
 # File di diagnosi regressioni
 
 # Errore in log($) al variare del prezzo
-y_pred = predict(model_final,x_test_1)
+y_pred = predict(model_final,X_test)
 plot(y_test, y_test-y_pred)
 abline(h=0)
 
@@ -29,10 +29,19 @@ datagg_pct = data_pct[,2:3] %>%
   group_by(group) %>% 
   summarise(across(everything(), list(mean = mean)))
 plot(datagg_pct, pch=20, xlab="bins from 100k to 2M dollar houses", ylab="mape in each bin")
+grid(nx=n_windows, ny=NULL)
 min(datagg_pct[,2])  # Best performing window of prediction average pct error
 max(datagg_pct[,2])  # Worst performing window of prediction average pct error
 # Distribution of pct error (having the mean error is not satisfying)
 hist(as.numeric(unlist(unname(datagg_pct[,2]))), breaks=20) 
+# Where should our model for rich houses start working, where the one for poor?
+datagg_pct[datagg_pct[,2]>20,1] 
+# first 5 groups, last 4 (or 9) out of 100
+groupsize = dim(x_test)[1]/n_windows
+sorted_by_price = x_test[order(x_test$price),"price"]
+max(sorted_by_price[1:5*groupsize])  # fino 210k
+sorted_by_price = x_test[order(x_test$price, decreasing = T),"price"]
+min(sorted_by_price[1:6*groupsize]) # 1.2M (or 900k) (to have 1M, last 6)
 
 
 #########################################################################

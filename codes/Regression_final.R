@@ -83,7 +83,7 @@ useful_sqm = c("log10.sqm_living.","log10.sqm_lot.","log10.sqm_living15.",
 #############################################################################
 
 selector = select_columns(useful_gen[c(-1,-3)],useful_age,useful_geo,useful_sqm)
-X1 = selector$x_train; x_test_1 = selector$x_test
+X_train = selector$x_train; X_test = selector$x_test
 model_final = lmrob(y_train~ns(bathfloors_ratio, df=2)+
                       view + grade +
                       cut(condition,breaks = c(min(condition),3,max(condition)),include.lowest = T, right=F)+
@@ -93,9 +93,10 @@ model_final = lmrob(y_train~ns(bathfloors_ratio, df=2)+
                       log10.sqm_lot.+
                       log10.sqm_living15.+
                       log10.sqm_lot15.+is_rich
-                    ,data=X1
+                    ,data=X_train
 )  # Using lmrob's MM-type estimator for lm
 summary(model_final)
-eval_regr(model_final,x_test_1,y_test, "mae") # Ignore warning (it's because the test data has geodists that are lower than the minimum found in the train data)
-eval_regr(model_final,x_test_1,y_test, "mape")
+summary(model_final)$r.squared
+eval_regr(model_final,X_test,y_test, "mae") # Ignore warning (it's because the test data has geodists that are lower than the minimum found in the train data)
+eval_regr(model_final,X_test,y_test, "mape")
 plot(model_final)
