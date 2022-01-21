@@ -1,0 +1,297 @@
+################################################################################
+####################      FUNCTIONAL  DATA  CREATION      #####################
+####################                   &                  #####################
+####################       TIME   SERIES   ANALYSIS       #####################
+################################################################################
+
+attach(kc_cleaned)
+
+n = 20347
+ndays = 396
+
+names(kc_cleaned)
+
+range_real = range(ord_date)
+range_ipot = c(1, 396)
+
+price_sqm_ratio = price / sqm_living
+
+useful_gen = c("bedfloors_ratio", "bathfloors_ratio","ord_date","view","condition",
+               "grade","is_rich")
+useful_age = c("has_ren", "yr_old")  # either them or renovate_index
+useful_geo = c("geodist_index")
+useful_sqm = c("log10(sqm_living)","log10(sqm_lot)","log10(sqm_living15)",
+               "log10(sqm_lot15)")
+
+
+################################################################################
+############################ DAILY SEARCH ######################################
+################################################################################
+counter = numeric(ndays)
+mean_daily_price_sqm_ratio = numeric(ndays)
+
+for (i in 1:n){
+  counter[ord_date[i]] = counter[ord_date[i]] +1
+  mean_daily_price_sqm_ratio[ord_date[i]] = mean_daily_price_sqm_ratio[ord_date[i]]
+                                            + price_sqm_ratio[i]
+}
+
+daily_means = NULL
+for (i in 1:length(mean_daily_price_sqm_ratio))
+  if (counter[i]!=0)
+    daily_means = c(daily_means,mean_daily_price_sqm_ratio[i]/counter[i])
+
+mean(daily_means) 
+
+#weekend_days = NULL
+#for (i in 0:56){
+#  weekend_days = c(weekend_days,3+7*i,4+7*i)
+#}
+
+week_days = rep(1,ndays)
+for (i in 0:56){
+  week_days[3+7*i] = 0
+  week_days[4+7*i] = 0
+}
+
+plot(1:ndays,mean_daily_price_sqm_ratio, col = ifelse(week_days,"red","lightblue"),pch=20)
+
+#shapiro.test(mean_daily_price_sqm_ratio[week_days==1])
+#shapiro.test(mean_daily_price_sqm_ratio[week_days==0])
+
+#hist(mean_daily_price_sqm_ratio[week_days==1])
+#hist(mean_daily_price_sqm_ratio[week_days==0])
+
+plot(1:length(mean_daily_price_sqm_ratio[week_days==1]),mean_daily_price_sqm_ratio[week_days==1])
+
+################################################################################
+############################# WEEKLY SEARCH ####################################
+################################################################################
+nweeks = 57
+week = numeric(n)
+
+for (i in 1:n)
+  week[i] = (ord_date[i]+2)%/%7+1
+
+counter_weeks = numeric(nweeks)
+price_sqm_ratio_weekly_mean = numeric(nweeks)
+
+# useful gen
+bedfloors_ratio_weekly_mean = numeric(nweeks)
+bathfloors_ratio_weekly_mean = numeric(nweeks)
+view_weekly_mean = numeric(nweeks)
+condition_weekly_mean = numeric(nweeks)
+grade_weekly_mean = numeric(nweeks)
+is_rich_weekly_mean = numeric(nweeks)
+
+# useful age
+renovate_index_weekly_mean = numeric(nweeks)
+
+# useful geo
+geodist_index_weekly_mean = numeric(nweeks)
+
+# useful sqm
+sqm_lot_weekly_mean = numeric(nweeks)
+sqm_living15_weekly_mean = numeric(nweeks)
+sqm_lot15_weekly_mean = numeric(nweeks)
+
+for (i in 1:n){
+  counter_weeks[week[i]] = counter_weeks[week[i]] +1
+  price_sqm_ratio_weekly_mean[week[i]] = price_sqm_ratio_weekly_mean[week[i]] + price_sqm_ratio[i]
+  
+  # useful gen 
+  bedfloors_ratio_weekly_mean[week[i]] = bedfloors_ratio_weekly_mean[week[i]] +  bedfloors_ratio[i]
+  bathfloors_ratio_weekly_mean[week[i]] = bathfloors_ratio_weekly_mean[week[i]] +  bathfloors_ratio[i]
+  view_weekly_mean[week[i]] = view_weekly_mean[week[i]] +  view[i]
+  condition_weekly_mean[week[i]] = condition_weekly_mean[week[i]] +  condition[i]
+  grade_weekly_mean[week[i]] = grade_weekly_mean[week[i]] +  grade[i]
+  is_rich_weekly_mean[week[i]] = is_rich_weekly_mean[week[i]] +  is_rich[i]
+  
+  # useful age
+  renovate_index_weekly_mean[week[i]] = renovate_index_weekly_mean[week[i]] + renovate_index[i]
+  
+  # useful geo
+  geodist_index_weekly_mean[week[i]] = geodist_index_weekly_mean[week[i]] + geodist_index[i]
+  
+  # useful sqm
+  sqm_lot_weekly_mean[week[i]] = sqm_lot_weekly_mean[week[i]] + sqm_lot[i]
+  sqm_living15_weekly_mean[week[i]] = sqm_living15_weekly_mean[week[i]] + sqm_living15[i]
+  sqm_lot15_weekly_mean[week[i]] = sqm_lot15_weekly_mean[week[i]] + sqm_lot15[i]
+ 
+}
+
+price_sqm_ratio_weekly_mean = price_sqm_ratio_weekly_mean/counter_weeks
+
+# useful gen
+bedfloors_ratio_weekly_mean = bedfloors_ratio_weekly_mean/counter_weeks
+bathfloors_ratio_weekly_mean = bathfloors_ratio_weekly_mean/counter_weeks
+view_weekly_mean = view_weekly_mean/counter_weeks
+condition_weekly_mean = condition_weekly_mean/counter_weeks
+grade_weekly_mean = grade_weekly_mean/counter_weeks
+is_rich_weekly_mean = is_rich_weekly_mean/counter_weeks
+
+# useful age
+renovate_index_weekly_mean = renovate_index_weekly_mean/counter_weeks
+
+# useful geo
+geodist_index_weekly_mean = geodist_index_weekly_mean/counter_weeks
+
+# useful sqm
+sqm_lot_weekly_mean = sqm_lot_weekly_mean/counter_weeks
+sqm_living15_weekly_mean = sqm_living15_weekly_mean/counter_weeks
+sqm_lot15_weekly_mean = sqm_lot15_weekly_mean/counter_weeks
+
+
+
+# mean(price_sqm_ratio)    #2832.683
+# mean(daily_means)        #2862.847, giusto perché i giorni cosniderati sono solo quelli in cui sono avvenute vendite
+# mean(price_sqm_ratio_weekly_mean) # 2855.558, giusto perchéla settimana numero uno pesa di più rispetto alle altre
+
+plot(1:nweeks,price_sqm_ratio_weekly_mean,pch=20)   # NB: da levare la prima settimana e le ultime 2 (guardare counter_weeks)
+plot(1:nweeks,grade_weekly_mean,pch=20)
+
+counter_weeks
+
+plot(2:(nweeks-2),price_sqm_ratio_weekly_mean[2:(nweeks-2)],pch=20)
+
+################################################################################
+############################# MONTHLY SEARCH ###################################
+################################################################################
+nmonths = 13
+counter_months = numeric(nmonths)
+mean_monthly_price_sqm_ratio = numeric(nmonths)
+
+month = numeric(n)
+for (i in 1:n) {
+  if(ord_date[i]<=31)
+    month[i] = 1
+  else if(ord_date[i]<=61)
+    month[i] = 2
+  else if(ord_date[i]<=92)
+    month[i] = 3
+  else if(ord_date[i]<=123)
+    month[i] = 4
+  else if(ord_date[i]<=153)
+    month[i] = 5
+  else if(ord_date[i]<=184)
+    month[i] = 6
+  else if(ord_date[i]<=214)
+    month[i] = 7
+  else if(ord_date[i]<=245)
+    month[i] = 8
+  else if(ord_date[i]<=276)
+    month[i] = 9
+  else if(ord_date[i]<=304)
+    month[i] = 10
+  else if(ord_date[i]<=335)
+    month[i] = 11
+  else if(ord_date[i]<=365)
+    month[i] = 12
+  else if(ord_date[i]<=396)
+    month[i] = 13
+}
+
+for (i in 1:n){
+  counter_months[month[i]] = counter_months[month[i]]+1
+  mean_monthly_price_sqm_ratio[month[i]] = mean_monthly_price_sqm_ratio[month[i]] + price_sqm_ratio[i]
+}
+
+
+mean_monthly_price_sqm_ratio = mean_monthly_price_sqm_ratio/counter_months
+
+# mean(price_sqm_ratio)    #2832.683
+# mean(daily_means)        #2862.847, giusto perché i giorni cosniderati sono solo quelli in cui sono avvenute vendite
+# mean(price_sqm_ratio_weekly_mean) # 2855.558, giusto perchéla settimana numero uno pesa di più rispetto alle altre
+# mean(mean_monthly_price_sqm_ratio)  #2835.358, giusto perché più il mese ha osservazioni, più quelle osservazioni pesano di meno
+
+
+plot(1:nmonths,mean_monthly_price_sqm_ratio,pch=20)
+
+################################################################################
+########################      PLOT    ##########################################
+################################################################################
+
+week_days = factor(week_days)
+
+x11()
+par(mfrow=c(3,1))
+plot(1:ndays,mean_daily_price_sqm_ratio/counter, col = ifelse(week_days==1,"red","lightblue")
+     ,pch=16, xlab = "days", ylab = "$/(m^2)")
+title("DAILY")
+plot(1:nweeks,price_sqm_ratio_weekly_mean,pch=16, xlab = "weeks", ylab = "$/(m^2)")
+title("WEEKLY")
+plot(1:nmonths,mean_monthly_price_sqm_ratio,pch=16, xlab = "months", ylab = "$/(m^2)")  
+title("MONTHLY")
+
+plot(ord_date)
+
+
+################################################################################
+#########################       ZIP CLUSTERS        ############################
+################################################################################
+
+zipcode = factor(zipcode)
+nzips = length(levels(zipcode))
+long_lat_means = matrix(NA,nrow = nzips, ncol = 2)
+
+for (i in 1:nzips)
+  long_lat_means[i,] = colMeans(cbind(long,lat)[which(zipcode==levels(zipcode)[i]),])
+
+plot(long_lat_means,pch= 16)
+dimnames(long_lat_means)[[1]] = levels(zipcode)
+dimnames(long_lat_means)[[2]] = c("Long","Lat")
+
+# b = NULL
+# w = NULL
+# for(k in 1:10){
+#   result.k = kmeans(long_lat_means, k)
+#   w = c(w, sum(result.k$wit))
+#   b = c(b, result.k$bet) }
+# x11()
+# matplot (1:10, w/(w+b), pch='', xlab='#clusters', ylab='within/tot', main='Choice of k', ylim=c(0,1))
+# lines(1:10, w/(w+b), type='b', lwd=2) 
+
+help(kmeans)
+
+k = 7
+
+result.k = kmeans(long_lat_means, centers = k, nstart = 300 ) # centers = quanti cluster voglio avere
+names(result.k)
+result.k$iter
+result.k$size
+
+x11()
+plot(long_lat_means, col = result.k$cluster+1,pch=16)
+
+################################################################################
+####################         ZIP FUNCTIONS         #############################
+################################################################################
+zip_clust = numeric(n)
+for (i in 1:n)
+  for (j in 1:nzips)
+    if (zipcode[i] == levels(zipcode)[j])
+      zip_clust[i] = result.k$cluster[j]    # non il massimo dell'efficienza ma funziona
+
+price_sqm_ratio_zip_mean = numeric(k)
+counter_zips = numeric(k)
+
+for (i in 1:n){
+  counter_zips[zip_clust[i]] = counter_zips[zip_clust[i]] + 1
+  price_sqm_ratio_zip_mean[zip_clust[i]] = price_sqm_ratio_zip_mean[zip_clust[i]] + price_sqm_ratio[i]
+}
+
+price_sqm_ratio_zip_mean = price_sqm_ratio_zip_mean/counter_zips
+
+mean(price_sqm_ratio_zip_mean) # 2621.452
+
+################################################################################
+############ Mean weekly price for sqm for each zip ############################
+################################################################################
+
+final = matrix(NA,nrow = nweeks,ncol = k)
+for (i in 1:nweeks)
+  for (j in 1:k)
+    final[i,j] = mean(price_sqm_ratio[which(week == i & zip_clust == j)])
+
+x11()
+matplot(final,type='l',lwd= 4)
