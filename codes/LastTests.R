@@ -69,7 +69,7 @@ p_val #0
 
 
 #2)
-# Obiettivo: Verificare se i quartieri più ricchi corrispondono a quelli dive le
+# Obiettivo: Verificare se i quartieri più ricchi corrispondono a quelli dove le
 # case costano di più
 
 i1=which(df_clean$is_rich==0)  
