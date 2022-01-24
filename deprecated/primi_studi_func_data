@@ -1,7 +1,7 @@
 ################################################################################
-####################      FUNCTIONAL  DATA  CREATION      #####################
-####################                   &                  #####################
-####################       TIME   SERIES   ANALYSIS       #####################
+####################      FUNCTIONAL  DATA  CREATION      ######################
+####################                   &                  ######################
+####################       TIME   SERIES   ANALYSIS       ######################
 ################################################################################
 
 attach(kc_cleaned)
@@ -11,18 +11,7 @@ ndays = 396
 
 names(kc_cleaned)
 
-range_real = range(ord_date)
-range_ipot = c(1, 396)
-
 price_sqm_ratio = price / sqm_living
-
-useful_gen = c("bedfloors_ratio", "bathfloors_ratio","ord_date","view","condition",
-               "grade","is_rich")
-useful_age = c("has_ren", "yr_old")  # either them or renovate_index
-useful_geo = c("geodist_index")
-useful_sqm = c("log10(sqm_living)","log10(sqm_lot)","log10(sqm_living15)",
-               "log10(sqm_lot15)")
-
 
 ################################################################################
 ############################ DAILY SEARCH ######################################
@@ -148,10 +137,6 @@ sqm_lot15_weekly_mean = sqm_lot15_weekly_mean/counter_weeks
 # mean(price_sqm_ratio_weekly_mean) # 2855.558, giusto perchéla settimana numero uno pesa di più rispetto alle altre
 
 plot(1:nweeks,price_sqm_ratio_weekly_mean,pch=20)   # NB: da levare la prima settimana e le ultime 2 (guardare counter_weeks)
-plot(1:nweeks,grade_weekly_mean,pch=20)
-
-counter_weeks
-
 plot(2:(nweeks-2),price_sqm_ratio_weekly_mean[2:(nweeks-2)],pch=20)
 
 ################################################################################
@@ -227,8 +212,81 @@ plot(ord_date)
 
 
 ################################################################################
+#########################      Tentativo mappe      ############################
+################################################################################
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  
+library(maps)
+library(usmap)
+library(ggplot2)
+library(mapdata)
+library(ggmap)
+library(mapdata)
+library(rgdal)
+library(tidyverse)
+
+ggplot(data=`King_County_Political_Boundary_(no_waterbodies)___kingco_area`)
+
+kc_bound <- readOGR(dsn="C:/Users/Messoanuovo.it/Desktop/TimeSeries/NPS - Time Series",layer="King_County_Political_Boundary_(no_waterbodies)___kingco_area")
+kc_bound_df <- map_data(kc_bound)
+
+map('county', 'washington', col = palette())
+
+
+plot_usmap(include = c("WA")) +
+  labs(title = "Washington (state)") +
+  theme(panel.background = element_rect(color = "blue"))
+
+washington <- subset(state, region=="washington")
+counties <- map_data("county")
+washington_county <- subset(counties, region=="washington")
+
+sa <- map_data('usa')
+state <- map_data("state")
+washington <- subset(state, region=="washington")
+counties <- map_data("county")
+washington_county <- subset(counties, region=="washington")
+ca_map <- ggplot(data=washington, mapping=aes(x=long, y=lat, group=group)) + 
+  coord_fixed(1.3) + 
+  geom_polygon(color="black", fill="gray") + 
+  geom_polygon(data=washington_county, fill=NA, color="white") + 
+  geom_polygon(color="black", fill=NA) + 
+  ggtitle('Washington Map with Counties') + 
+  theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(), axis.text.y=element_blank(), axis.ticks.y=element_blank())
+ca_map
+
+################################################################################
+################################################################################
+################################################################################
+
+# TENTATIVO 1
+library(ggmap)
+qmplot(data = kc_cleaned, 
+       x = long, 
+       y = lat, 
+       color = I("#342c5c"), 
+       alpha = I(0.5))
+
+# TENTATIVO 2
+install.packages("sf")
+library(sf)
+
+address <- st_read("AddressShpParts/address.shp")
+head(address)
+
+ggplot(data = address) +
+  geom_sf()
+
+
+################################################################################
 #########################       ZIP CLUSTERS        ############################
 ################################################################################
+
 
 zipcode = factor(zipcode)
 nzips = length(levels(zipcode))
@@ -254,14 +312,53 @@ dimnames(long_lat_means)[[2]] = c("Long","Lat")
 help(kmeans)
 
 k = 7
-
 result.k = kmeans(long_lat_means, centers = k, nstart = 300 ) # centers = quanti cluster voglio avere
 names(result.k)
 result.k$iter
 result.k$size
 
+colors = ifelse(result.k$cluster==1,"red",
+                ifelse(result.k$cluster==2 ,"blue",
+                ifelse(result.k$cluster==3,"purple",
+                ifelse(result.k$cluster==4,"lightgreen",
+                ifelse(result.k$cluster==5,"darkgreen",
+                ifelse(result.k$cluster==6,"lightblue","orange"))))))
 x11()
-plot(long_lat_means, col = result.k$cluster+1,pch=16)
+# plot(long_lat_means, col = result.k$cluster+1,pch=16)
+plot(long_lat_means, col = colors,pch=20)
+
+#richest_by_Enri = c("98004","98006","98033","98039","98040","98053","98074","98075",
+#           "98077","98101","98110","98112","98134","98164","98199")
+
+richest_ind_by_Enri = c(4,6,22,25,26,30,38,39,40,49,70)
+
+price_zip_mean = numeric(nzips)
+price_sqm_zip_mean = numeric(nzips)
+for (i in 1:nzips){
+  price_zip_mean[i] = mean(price[which(zipcode==levels(zipcode)[i])])
+  price_sqm_zip_mean[i] = mean(price_sqm_ratio[which(zipcode==levels(zipcode)[i])])
+}
+
+plot(1:nzips,price_zip_mean)
+richest_by_Jahi = which(price_zip_mean>650000)
+
+plot(1:nzips,price_sqm_zip_mean)
+richest_sqm_by_Jahi = which(price_sqm_zip_mean>4000)
+
+plot(long_lat_means, col = colors,pch=20)
+title("Enri's richest")
+points(long_lat_means[richest_ind_by_Enri,])
+points(-122.33825,47.62617,col = "black",pch = 16)
+
+plot(long_lat_means, col = colors,pch=20)
+title("Jahi's richest ($)")
+points(long_lat_means[richest_by_Jahi,])
+points(-122.33825,47.62617,col = "black",pch = 16)
+
+plot(long_lat_means, col = colors,pch=20)
+title("Jahi's richest ($/m2)")
+points(long_lat_means[richest_sqm_by_Jahi,])
+points(-122.33825,47.62617,col = "black",pch = 16)
 
 ################################################################################
 ####################         ZIP FUNCTIONS         #############################
@@ -288,10 +385,106 @@ mean(price_sqm_ratio_zip_mean) # 2621.452
 ############ Mean weekly price for sqm for each zip ############################
 ################################################################################
 
-final = matrix(NA,nrow = nweeks,ncol = k)
+price_sqm_weekly_zip_mean = matrix(NA,nrow = nweeks,ncol = k)
+#grade_weekly_zip_mean = matrix(NA,nrow = nweeks,ncol = k)
+#geodist_index_weekly_zip_mean = matrix(NA,nrow = nweeks,ncol = k)
+
 for (i in 1:nweeks)
-  for (j in 1:k)
-    final[i,j] = mean(price_sqm_ratio[which(week == i & zip_clust == j)])
+  for (j in 1:k){
+    price_sqm_weekly_zip_mean[i,j] = mean(price_sqm_ratio[which(week == i & zip_clust == j)])
+#    grade_weekly_zip_mean[i,j] = mean(grade[which(week == i & zip_clust == j)])
+#    geodist_index_weekly_zip_mean[i,j] = mean(geodist_index[which(week == i & zip_clust == j)])
+  }
+
+
+matplot(price_sqm_weekly_zip_mean,type='l',lwd= 3,
+        xlab = "weeks",ylab="price/squaremeter mean",
+        col = c("red","blue","purple","lightgreen","darkgreen","lightblue","orange"))
+
+#matplot(grade_weekly_zip_mean,type='l',lwd= 3)
+#matplot(geodist_index_weekly_zip_mean,type='l',lwd= 3,col = c("red","blue","purple","lightgreen","darkgreen","lightblue","orange"))
 
 x11()
-matplot(final,type='l',lwd= 4)
+plot(long_lat_means, col = colors,pch=16,asp =1)
+points(-122.33825,47.62617,col = "black",pch = 16)
+
+################################################################################
+####################        GRIGLIA per PANZ          ##########################
+################################################################################
+
+help("expand.grid")
+
+
+model_final = lmrob(y_train~ns(bathfloors_ratio, df=2)+
+                      view + grade +
+                      cut(condition,breaks = c(min(condition),3,max(condition)),include.lowest = T, right=F)+
+                      I((yr_old-80)*(yr_old>80)) + yr_old:has_ren + 
+                      bs(geodist_index, degree=2) +
+                      log10.sqm_living. +
+                      log10.sqm_lot.+
+                      log10.sqm_living15.+
+                      log10.sqm_lot15.+is_rich)
+model_gam=gam(prestige ~ s(education,bs='cr') + s(income,bs='cr'))
+
+bathfloors_ratio.grid = seq(range(bathfloors_ratio)[1],range(bathfloors_ratio)[2],length.out = 100)
+view.grid = levels(as.factor(view))
+grade.grid = levels(as.factor(grade))
+condition.grid = levels(as.factor(condition))
+yr_old.grid = seq(range(yr_old)[1],range(yr_old)[2],length.out = 100)
+has_ren.grid = levels(as.factor(has_ren))
+geodist_index.grid = seq(range(geodist_index)[1],range(geodist_index)[2],length.out = 100)
+log10.sqm_living.grid = seq(range(log10.sqm_living.)[1],range(log10.sqm_living.)[2],length.out = 100)
+log10.sqm_lot.grid = seq(range(log10.sqm_lot.)[1],range(log10.sqm_lot.)[2],length.out = 100)
+log10.sqm_living15.grid = seq(range(log10.sqm_living15.)[1],range(log10.sqm_living15.)[2],length.out = 100)
+log10.sqm_lot15.grid = seq(range(log10.sqm_lot15.)[1],range(log10.sqm_lot15.)[2],length.out = 100)
+
+grid=expand.grid(bathfloors_ratio.grid,view.grid,grade.grid,condition.grid,yr_old.grid,
+                 has_ren.grid,geodist_index.grid,log10.sqm_living.grid,log10.sqm_lot.grid,
+                 log10.sqm_living15.grid,log10.sqm_lot15.grid)
+
+names(grid)=c('bathfloors_ratio','view','grade','condition','yr_old','has_ren',
+              'geodist_index','log10.sqm_living.','log10.sqm_lot.',
+              'log10.sqm_living15.','log10.sqm_lot15.')
+
+pred=predict(...,newdata=grid)
+
+################################################################################
+#######################       MA for weekly price       ########################
+################################################################################
+
+price_sqm_weekly_zip_mean_no_last = price_sqm_weekly_zip_mean[-c(56,57),]
+
+# smoothing utilizzando ultime 4 osservazioni:
+smo1 = matrix(NA,nrow = 55,ncol = k)
+smo1[1:3,]= price_sqm_weekly_zip_mean_no_last[1:3,]
+for ( i in 4:55){
+  smo1[i,] = colMeans(price_sqm_weekly_zip_mean_no_last[(i-3):i,])
+}
+
+matplot(smo1,type="l")
+
+# smoothing utilizzando le 5 osservazioni più vicine:
+smo2 = matrix(NA,nrow = 55,ncol = k)
+smo2[c(1,2,54,55),] = price_sqm_weekly_zip_mean_no_last[c(1,2,54,55),]
+for ( i in 3:53){
+  smo2[i,] = colMeans(price_sqm_weekly_zip_mean_no_last[(i-2):(i+2),])
+}
+
+matplot(smo2,type="l")
+
+# smoothing utilizzando FDA methods:
+library(fda)
+library(fields)
+
+n = dim(price_sqm_weekly_zip_mean_no_last)[1]
+N = dim(price_sqm_weekly_zip_mean_no_last)[2]
+time = 1:n	# ed eventuali modifiche rispetto allo step temporale
+matplot(price_sqm_weekly_zip_mean_no_last, type = 'l', main = 'p-w-lin', xlab = 'weeks', ylab = 'mean price/surf')
+
+basis= create.bspline.basis(rangeval = c(1,n), nbasis = 13)	# nbasis 
+
+data_fd = Data2fd(y = price_sqm_weekly_zip_mean_no_last, argvals = time, basisobj = basis)	# rangeval segue le eventuali modifiche di time
+plot.fd(data_fd, main="B-splines", xlab = 'weeks', ylab = 'mean price/surf')
+title("smooth")
+lines(mean.fd(data_fd),lwd=2)		# media
+
