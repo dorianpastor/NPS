@@ -1,5 +1,3 @@
-#setwd("C:/Users/panze/Desktop/NONPARAM STATISTICS/PROGETTO_GITHUB/NPS")
-
 rm(list=ls())
 library(MASS)
 library(car)
@@ -10,6 +8,8 @@ library(gam)
 library(robustbase)
 library(lme4)
 library(pbapply)
+library(xgboost)
+library(Hmisc)
 
 df = read.csv("kc_cleaned.csv")
 attach(df)
@@ -34,30 +34,52 @@ select_columns <- function(...){
 }
 
 eval_regr <- function(model, x_test, y_test, type="mape"){
-  #predictors = labels(terms(model))
   y_pred = predict(model,x_test)
   if (type=="mae"){
-    error = mae(10^y_test, 10^y_pred) 
-    print(paste("Mean Absolute Error is", round(error), "dollars"))
+    error = round(mae(10^y_test, 10^y_pred)) 
+    print(paste("Mean Absolute Error is", error, "dollars"))
   }
   else if (type=="mape"){
-    error = mape(10^y_test, 10^y_pred) 
-    print(paste("Mean Absolute Percentage Error is", round(100*error,2), "%"))
+    error = round(100*mape(10^y_test, 10^y_pred),2)
+    print(paste("Mean Absolute Percentage Error is", error, "%"))
   }
   else if (type=="mse"){
-    error = mse(10^y_test, 10^y_pred) 
-    print(paste("Mean Squared Error is", round(error), "dollars^2"))
+    error = round(mse(10^y_test, 10^y_pred))
+    print(paste("Mean Squared Error is", error, "dollars^2"))
   }
   else if (type=="rmse"){
-    error = rmse(10^y_test, 10^y_pred) 
-    print(paste("Root Mean Squared Error is", round(error), "dollars"))
+    error = round(rmse(10^y_test, 10^y_pred))
+    print(paste("Root Mean Squared Error is", error, "dollars"))
   }
   else{
     print("Not implemented")
   }
-  #return(error)
+  return(error)
 }
 
+
+train_XGB <- function(X_train, y_train, X_test, y_test){
+  x_train_ = data.matrix(X_train)
+  y_train_ = data.matrix(y_train)
+  x_test_ = data.matrix(X_test)
+  y_test_ = data.matrix(y_test)
+  dtrain = xgb.DMatrix(data=x_train_, label = y_train_)
+  model_param = xgboost(data=dtrain, label = y_train, nrounds=250,
+                        objective = "reg:squarederror",
+                        booster="gbtree")
+  
+  summary(model_param)
+  eval_regr(model_param,x_test_,y_test_, "mae") 
+  eval_regr(model_param,x_test_,y_test_, "mape")
+  # plot them features! what's contributing most to our model?
+  xgb.plot.multi.trees(feature_names = names(x_train_), 
+                       model = model_param)
+  # get information on how important each feature is
+  importance_matrix <- xgb.importance(names(x_train_), model = model_param)
+  # and plot it!
+  xgb.plot.importance(importance_matrix)
+  return(model_param)
+}
 
 #############################################################################
 # Split train and test
@@ -69,7 +91,7 @@ x_test = split$x_test; y_test = split$y_test;
 
 
 #############################################################################
-# Variable groups
+# Feature groups
 #############################################################################
 
 useless = c("id","price","bedrooms","bathrooms","floors",
@@ -81,7 +103,7 @@ useless_sqm = c("sqm_living", "sqm_lot", "sqm_living15", "sqm_lot15", "sqm_above
 
 useful_gen = c("bedfloors_ratio", "bathfloors_ratio","ord_date","view","condition",
                "grade","is_rich")
-useful_age = c("has_ren", "yr_old")  # either them or renovate_index
+useful_age = c("has_ren", "yr_old")
 useful_geo = c("geodist_index")
 useful_sqm = c("log10.sqm_living.","log10.sqm_lot.","log10.sqm_living15.",
                "log10.sqm_lot15.")
@@ -108,21 +130,17 @@ plot(model_final)
 
 
 ###################################################################################################################################################################################
-# Linear Regression Model (using the same variables of the final nonparam regression model)
+# Comparison 1 - Parametric Model
+# Linear Regression (with the same variables)
 ###################################################################################################################################################################################
 
 linmod <- lm(y_train ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
                log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + log10.sqm_lot15. + is_rich, data=X1)
 summary(linmod)
-x11()
-plot(linmod$residuals,xlab='Fitted',ylab='Residuals', main='Residuals Vs Fitted')
-x11()
-qqnorm(linmod$residuals)
-qqline(linmod$residuals)
-
+plot(linmod)
 
 ###################################################################################################################################################################################
-# Testing on linear regression model
+# Testing significance of linear regression model
 ###################################################################################################################################################################################
 
 #Global F-test 
@@ -178,34 +196,143 @@ for(perm in 1:B){
 p_val <- sum(T_H02>=T0_x2)/B
 p_val #0.023
 
-#ho fatto permutational t-test proprio su queste due variabili perchè erano quelle che avevano p-value dei t-test più "alto" nel summary (le altre avevano tutte p-value circa 10^-16)
+# We did a permutational t-test on the two variables that were more likely to 
+# be not significative because of their higher pvalues on the summary
+
+###################################################################################################################################################################################
+# Comparison 2 - Other Non-Parametric Model
+# XGBoost (with the same variables)
+###################################################################################################################################################################################
+# We train it on all variables
+model_param = train_XGB(x_train[4:34],y_train,x_test[4:34],y_test)
 
 
 ###################################################################################################################################################################################
-# Models Comparison
+# Comparison Results
 ###################################################################################################################################################################################
 
 #Mean Absolute Error
 eval_regr(model_final,x_test_1,y_test, "mae") 
 eval_regr(linmod,x_test_1,y_test, "mae") 
+eval_regr(treemod,x_test_1,y_test, "mae") 
 
 #Mean Absolute Percentage Error
 eval_regr(model_final,x_test_1,y_test, "mape")
 eval_regr(linmod,x_test_1,y_test, "mape")
+eval_regr(treemod,x_test_1,y_test, "mape") 
 
 #Mean Squared Error
 eval_regr(model_final,x_test_1,y_test, "mse")
 eval_regr(linmod,x_test_1,y_test, "mse")
+eval_regr(treemod,x_test_1,y_test, "mse") 
 
 #Root Mean Squared Error
 eval_regr(model_final,x_test_1,y_test, "rmse")
 eval_regr(linmod,x_test_1,y_test, "rmse")
-
+eval_regr(treemod,x_test_1,y_test, "rmse") 
 
 #Prediction with classical method
 pred_lin <- predict(linmod, newdata=x_test_1, type='response')
 pred_nonparam <- predict(model_final, newdata=x_test_1, type='response')
 
+###################################################################################################################################################################################
+# Diagnostics on the NonParametric Regression
+###################################################################################################################################################################################
+# How does error change as a function of the house prices?
+
+# log($) error as function of the price
+y_pred = predict(model_final,X_test)
+plot(y_test, y_test-y_pred)
+abline(h=0)
+
+
+n_windows = 100 # Data are split in buckets of n_windows elements
+
+# In this block buckets are based on absolute error
+data = data.frame(cbind(y_test, abs(10^y_test-10^y_pred)))
+colnames(data) = c("y_test","abs_error")
+data$group =  as.numeric(cut_number(data$y_test,n_windows))
+datagg = data[,2:3] %>% 
+  group_by(group) %>% 
+  summarise(across(everything(), list(mean = mean)))
+plot(datagg, pch=20, xlab="bins from 100k to 2M dollar houses", ylab="mae in each bin")
+min(datagg[,2])  # Best performing window of prediction average error
+max(datagg[,2])  # Worst performing window of prediction average error
+# Distribution of pct error (having the mean error is not satisfying)
+hist(as.numeric(unlist(unname(datagg[,2]))), breaks=20) 
+
+# In this block buckets are based on absolute percentage error
+data_pct = data.frame(cbind(y_test, 100*abs(10^y_test-10^y_pred)/(10^y_pred)))
+colnames(data_pct) = c("y_test","abs_pct_error")
+data_pct$group =  as.numeric(cut_number(data_pct$y_test,n_windows))
+datagg_pct = data_pct[,2:3] %>% 
+  group_by(group) %>% 
+  summarise(across(everything(), list(mean = mean)))
+plot(datagg_pct, pch=20, xlab="bins from 100k to 2M dollar houses", ylab="mape in each bin")
+grid(nx=n_windows, ny=NULL)
+min(datagg_pct[,2])  # Best performing window of prediction average pct error
+max(datagg_pct[,2])  # Worst performing window of prediction average pct error
+# Distribution of pct error (having the mean error is not satisfying)
+hist(as.numeric(unlist(unname(datagg_pct[,2]))), breaks=20) 
+
+# Where should our model for expensive houses be applied?
+datagg_pct[datagg_pct[,2]>20,1] 
+# first 5 groups, last 4 (or 9) out of 100
+groupsize = dim(x_test)[1]/n_windows
+sorted_by_price = x_test[order(x_test$price),"price"]
+max(sorted_by_price[1:5*groupsize])  # until 210k
+# All the houses less expensive than 210k $ should be modelled differently
+sorted_by_price = x_test[order(x_test$price, decreasing = T),"price"]
+min(sorted_by_price[1:6*groupsize]) # 1.2M (or 900k) (to have 1M, last 6)
+# We decide to model all the houses more expensive than 1M $ with a different model
+
+###################################################################################################################################################################################
+# Model for expensive properties
+###################################################################################################################################################################################
+
+X2 = X1[which(y_train>=log10(1000000)),] ; x_test_2 = x_test_1[which(y_test>=log10(1000000)),]
+y_train_2 = y_train[which(y_train>=log10(1000000))]; y_test_2 = y_test[which(y_test>=log10(1000000))]
+model_expensive = lmrob(y_train_2~ns(bathfloors_ratio, df=2)+
+                      view + grade +
+                      bs(geodist_index, degree=2) +   
+                      bs(log10.sqm_living., degree=2) + 
+                      bs(log10.sqm_lot., degree=2) +   
+                      log10.sqm_living15.+             
+                      ns(log10.sqm_lot15., df=2)
+                    , data=X2
+) 
+mae_exp = eval_regr(model_expensive,x_test_2,y_test_2, "mae")
+mape_exp = eval_regr(model_expensive,x_test_2,y_test_2, "mape")
+
+
+
+###################################################################################################################################################################################
+# Model for standard properties
+###################################################################################################################################################################################
+
+X0 = X1[which(y_train<log10(1000000)),] ; x_test_0 = x_test_1[which(y_test<log10(1000000)),]
+y_train_0 = y_train[which(y_train<log10(1000000))]; y_test_0 = y_test[which(y_test<log10(1000000))]
+model_standard = lmrob(y_train_0~ns(bathfloors_ratio, df=2)+
+                      view + grade +
+                      cut(condition,breaks = c(min(condition),3,max(condition)),include.lowest = T, right=F)+
+                      I((yr_old-80)*(yr_old>80)) + yr_old:has_ren + 
+                      bs(geodist_index, degree=2) +
+                      log10.sqm_living. +
+                      log10.sqm_lot.+
+                      log10.sqm_living15.+
+                      log10.sqm_lot15.+is_rich
+                    ,data=X0) 
+mae_st = eval_regr(model_standard,x_test_0,y_test_0, "mae")
+mape_st = eval_regr(model_standard,x_test_0,y_test_0, "mape")
+
+###################################################################################################################################################################################
+# Merged results
+###################################################################################################################################################################################
+
+final_mape = (length(y_test_0)*mape_st+length(y_test_2)*mape_exp)/length(y_test)
+final_mape  # 17%
+final_mae = (length(y_test_0)*mae_st+length(y_test_2)*mae_exp)/length(y_test)
+final_mae  # 75k on standard 200k on expensive
 
 ###################################################################################################################################################################################
 # Prediction with Reverse Percentile Intervals 
@@ -253,6 +380,9 @@ points(y_test, col='black', cex=1, pch=19)
 legend('topleft',c("nonparam", "classic", "true"), col=c('darkgreen','red','black'), pch=c(17,15,19))
 
 
+###################################################################################################################################################################################
+# 
+###################################################################################################################################################################################
 
 
 
