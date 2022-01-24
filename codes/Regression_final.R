@@ -1,3 +1,5 @@
+#setwd("C:/Users/panze/Desktop/NONPARAM STATISTICS/PROGETTO_GITHUB/NPS")
+
 rm(list=ls())
 library(MASS)
 library(car)
@@ -6,9 +8,13 @@ library(dplyr)
 library(np)
 library(gam)
 library(robustbase)
+library(lme4)
+library(pbapply)
 
 df = read.csv("kc_cleaned.csv")
+attach(df)
 target = "log10.price."
+
 
 #############################################################################
 # Define functions
@@ -52,6 +58,7 @@ eval_regr <- function(model, x_test, y_test, type="mape"){
   #return(error)
 }
 
+
 #############################################################################
 # Split train and test
 #############################################################################
@@ -59,6 +66,7 @@ eval_regr <- function(model, x_test, y_test, type="mape"){
 split = train_test_split(df)
 x_train = split$x_train; y_train = split$y_train
 x_test = split$x_test; y_test = split$y_test;
+
 
 #############################################################################
 # Variable groups
@@ -78,12 +86,13 @@ useful_geo = c("geodist_index")
 useful_sqm = c("log10.sqm_living.","log10.sqm_lot.","log10.sqm_living15.",
                "log10.sqm_lot15.")
 
+
 #############################################################################
-# Multivariate Regressions
+# Final NonParametric Regression Model
 #############################################################################
 
 selector = select_columns(useful_gen[c(-1,-3)],useful_age,useful_geo,useful_sqm)
-X_train = selector$x_train; X_test = selector$x_test
+X1 = selector$x_train; x_test_1 = selector$x_test
 model_final = lmrob(y_train~ns(bathfloors_ratio, df=2)+
                       view + grade +
                       cut(condition,breaks = c(min(condition),3,max(condition)),include.lowest = T, right=F)+
@@ -93,10 +102,157 @@ model_final = lmrob(y_train~ns(bathfloors_ratio, df=2)+
                       log10.sqm_lot.+
                       log10.sqm_living15.+
                       log10.sqm_lot15.+is_rich
-                    ,data=X_train
-)  # Using lmrob's MM-type estimator for lm
+                    ,data=X1)  # Using lmrob's MM-type estimator for lm
 summary(model_final)
-summary(model_final)$r.squared
-eval_regr(model_final,X_test,y_test, "mae") # Ignore warning (it's because the test data has geodists that are lower than the minimum found in the train data)
-eval_regr(model_final,X_test,y_test, "mape")
 plot(model_final)
+
+
+###################################################################################################################################################################################
+# Linear Regression Model (using the same variables of the final nonparam regression model)
+###################################################################################################################################################################################
+
+linmod <- lm(y_train ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
+               log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + log10.sqm_lot15. + is_rich, data=X1)
+summary(linmod)
+x11()
+plot(linmod$residuals,xlab='Fitted',ylab='Residuals', main='Residuals Vs Fitted')
+x11()
+qqnorm(linmod$residuals)
+qqline(linmod$residuals)
+
+
+###################################################################################################################################################################################
+# Testing on linear regression model
+###################################################################################################################################################################################
+
+#Global F-test 
+n <- dim(X1)[1]
+T0_glob <- summary(linmod)$f[1]
+T0_glob
+B <- 10000 
+T_H0glob <- numeric(B)
+for(perm in 1:B){
+  permutazione <- sample(n)
+  Y.perm.glob <- y_train[permutazione]
+  T_H0glob[perm] <- summary(lm(Y.perm.glob ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
+                                 log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + log10.sqm_lot15. + is_rich, data=X1))$f[1]
+}
+p_val <- sum(T_H0glob>=T0_glob)/B
+p_val #0
+
+
+#t-test su log10.sqm_lot.
+#H0: beta8 = 0 vs H1: beta8 != 0
+T0_x1 <- abs(summary(linmod)$coefficients[9,3])
+T0_x1
+regr.H01 <- lm(y_train ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
+                 log10.sqm_living. + log10.sqm_living15. + log10.sqm_lot15. + is_rich, data=X1)
+residui.H01 <- regr.H01$residuals
+T_H01 <- numeric(B)
+for(perm in 1:B){
+  permutazione <- sample(n)
+  residui.H01.perm <- residui.H01[permutazione]
+  Y.perm.H01 <- regr.H01$fitted + residui.H01.perm
+  T_H01[perm] <- abs(summary(lm(Y.perm.H01 ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
+                                  log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + log10.sqm_lot15. + is_rich, data=X1))$coefficients[9,3])
+}
+p_val <- sum(T_H01>=T0_x1)/B
+p_val #0
+
+
+#t-test su log10.sqm_lot15.
+#H0: beta10 = 0 vs H1: beta10 != 0
+T0_x2 <- abs(summary(linmod)$coefficients[11,3])
+T0_x2
+regr.H02 <- lm(y_train ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
+                 log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich, data=X1)
+residui.H02 <- regr.H02$residuals
+T_H02 <- numeric(B)
+for(perm in 1:B){
+  permutazione <- sample(n)
+  residui.H02.perm <- residui.H02[permutazione]
+  Y.perm.H02 <- regr.H02$fitted + residui.H02.perm
+  T_H02[perm] <- abs(summary(lm(Y.perm.H02 ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
+                                  log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + log10.sqm_lot15. + is_rich, data=X1))$coefficients[11,3])
+}
+p_val <- sum(T_H02>=T0_x2)/B
+p_val #0.023
+
+#ho fatto permutational t-test proprio su queste due variabili perchè erano quelle che avevano p-value dei t-test più "alto" nel summary (le altre avevano tutte p-value circa 10^-16)
+
+
+###################################################################################################################################################################################
+# Models Comparison
+###################################################################################################################################################################################
+
+#Mean Absolute Error
+eval_regr(model_final,x_test_1,y_test, "mae") 
+eval_regr(linmod,x_test_1,y_test, "mae") 
+
+#Mean Absolute Percentage Error
+eval_regr(model_final,x_test_1,y_test, "mape")
+eval_regr(linmod,x_test_1,y_test, "mape")
+
+#Mean Squared Error
+eval_regr(model_final,x_test_1,y_test, "mse")
+eval_regr(linmod,x_test_1,y_test, "mse")
+
+#Root Mean Squared Error
+eval_regr(model_final,x_test_1,y_test, "rmse")
+eval_regr(linmod,x_test_1,y_test, "rmse")
+
+
+#Prediction with classical method
+pred_lin <- predict(linmod, newdata=x_test_1, type='response')
+pred_nonparam <- predict(model_final, newdata=x_test_1, type='response')
+
+
+###################################################################################################################################################################################
+# Prediction with Reverse Percentile Intervals 
+###################################################################################################################################################################################
+
+B<-1000
+pred.boot.L <- numeric(B)
+fitted.obs<-model_final$fitted.values
+res.obs <-model_final$residuals
+
+for(b in 1:B)
+{
+  response.b=fitted.obs + sample(res.obs, replace=T)
+  response.b=as.vector(response.b)
+  modfin.b = lmrob(response.b~ns(bathfloors_ratio, df=2)+
+                     view + grade +
+                     cut(condition,breaks = c(min(condition),3,max(condition)),include.lowest = T, right=F)+
+                     I((yr_old-80)*(yr_old>80)) + yr_old:has_ren + 
+                     bs(geodist_index, degree=2) +
+                     log10.sqm_living. +
+                     log10.sqm_lot.+
+                     log10.sqm_living15.+
+                     log10.sqm_lot15.+is_rich,
+                   data=X1)
+  pred.boot.L[b] <- predict(modfin.b, newdata=x_test_1, type='response')
+}
+
+alpha <- 0.05
+T.boot <- pred.boot.L
+T.obs <- as.vector(pred_nonparam)
+r.q.L<- quantile(T.boot, 1-alpha/2)
+l.q.L<-quantile(T.boot, alpha/2)
+CI<-cbind(T.obs-(r.q.L-T.obs), T.obs, T.obs-(l.q.L-T.obs))
+
+#NON CICLA PD MA E' GIUSTO, BISOGNA CAPIRE PERCHE' NON VA CON lmrob()
+
+x11()
+layout(1)
+plot(CI[,2], col='darkgreen', cex=1, xlim=c(1,30),ylim=c(5,6),pch=17, main='Classic Vs Nonparametric', xlab='', ylab='LogY')
+points(CI[,1], col='blue', cex=1.7, pch='-')
+points(CI[,3], col='blue', cex=1.7, pch='-')
+segments(1:30,CI[,1],1:30,CI[,3], lwd=1)
+points(pred_nonparam, col='red', cex=1,pch=15)
+points(y_test, col='black', cex=1, pch=19)
+legend('topleft',c("nonparam", "classic", "true"), col=c('darkgreen','red','black'), pch=c(17,15,19))
+
+
+
+
+

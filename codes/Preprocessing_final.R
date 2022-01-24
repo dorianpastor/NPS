@@ -66,6 +66,7 @@ geodist <- function(Lat,Lon){
 }
 
 # Richest Zipcodes in King's County
+# source: https://www.zipdatamaps.com/economics/income/agi/metro/wealthiest-zipcodes-in-metro-seattle-tacoma
 richest = c("98039","98040","98004","98112","98164","98134","98033","98075",
             "98074","98077","98101","98053","98110","98006","98199")
 # Conversion sqft to sqm
