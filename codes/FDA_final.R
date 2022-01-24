@@ -309,7 +309,6 @@ dimnames(long_lat_means)[[2]] = c("Long","Lat")
 # matplot (1:10, w/(w+b), pch='', xlab='#clusters', ylab='within/tot', main='Choice of k', ylim=c(0,1))
 # lines(1:10, w/(w+b), type='b', lwd=2) 
 
-help(kmeans)
 
 k = 7
 result.k = kmeans(long_lat_means, centers = k, nstart = 300 ) # centers = quanti cluster voglio avere
@@ -472,6 +471,24 @@ for ( i in 3:53){
 
 matplot(smo2,type="l")
 
+# Conformal Prediction
+ber_m = t(smo2)
+alpha=.1
+n=nrow(ber_m)
+i1=sample(1:n,n/2)
+t_set=ber_m[i1,]
+c_set=ber_m[-i1,]
+mu=colMeans(t_set)
+res=c_set-mu
+ncm=apply(res,2,max)
+ncm_sort=c(sort(ncm),Inf)
+d=ncm_sort[ceiling((n/2 + 1)*(1-alpha))]
+
+matplot(cbind(mu,mu+d,mu-d),type='l')
+# FINE Conformal Prediction
+
+
+# EVITEREI QUESTI METODI
 # smoothing utilizzando FDA methods:
 library(fda)
 library(fields)
@@ -487,4 +504,3 @@ data_fd = Data2fd(y = price_sqm_weekly_zip_mean_no_last, argvals = time, basisob
 plot.fd(data_fd, main="B-splines", xlab = 'weeks', ylab = 'mean price/surf')
 title("smooth")
 lines(mean.fd(data_fd),lwd=2)		# media
-

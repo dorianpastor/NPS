@@ -241,7 +241,7 @@ pred_nonparam <- predict(model_final, newdata=x_test_1, type='response')
 # How does error change as a function of the house prices?
 
 # log($) error as function of the price
-y_pred = predict(model_final,X_test)
+y_pred = predict(model_final,x_test_1)
 plot(y_test, y_test-y_pred)
 abline(h=0)
 
@@ -283,7 +283,7 @@ sorted_by_price = x_test[order(x_test$price),"price"]
 max(sorted_by_price[1:5*groupsize])  # until 210k
 # All the houses less expensive than 210k $ should be modelled differently
 sorted_by_price = x_test[order(x_test$price, decreasing = T),"price"]
-min(sorted_by_price[1:6*groupsize]) # 1.2M (or 900k) (to have 1M, last 6)
+min(sorted_by_price[1:6*groupsize]) # have 1M, last 6 buckets
 # We decide to model all the houses more expensive than 1M $ with a different model
 
 ###################################################################################################################################################################################
@@ -303,8 +303,6 @@ model_expensive = lmrob(y_train_2~ns(bathfloors_ratio, df=2)+
 ) 
 mae_exp = eval_regr(model_expensive,x_test_2,y_test_2, "mae")
 mape_exp = eval_regr(model_expensive,x_test_2,y_test_2, "mape")
-
-
 
 ###################################################################################################################################################################################
 # Model for standard properties
