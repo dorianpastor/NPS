@@ -82,9 +82,9 @@ p_val <- sum(T2>=T20)/B
 p_val #0.324
 #we don't reject H0
 #I can argue that the Log_sqm_living is equal to the Log_sqm_living15
-#quindi le dimensioni della casa venduta sono uguali alle dimensioni medie delle case dei 15 vicini più vicini,
-#per es. la casa venduta è, in media, in un insieme di villette a schiera o in un insieme di ville, non una villa con casette piccoline vicine
-
+#So the dimensions of houses sold are equal to the dimensions of the 15 nearest houses
+#for example: the house sold is, on average, in a set of terraced houses (villette a schiera)
+#or in a set of villas
 
 ########## H0: D_OBBR$log10.price. =d= D_RBNR$log10.price. vs H1: D_OBBR$log10.price. =!d!= D_RBBR$log10.price. ######################
 
@@ -235,7 +235,7 @@ abline(v=T0,col=3,lwd=4)
 p_val <- sum(T_stat>=T0)/B
 p_val  #0.603
 #we don't reject H0
-#LogY medio del gruppo 1 uguale a LogY medio del gruppo 2
+#Mean LogY of group 1 equal to mean LogY of group 2
 
 
 #TEST 1 vs 3
@@ -270,8 +270,7 @@ abline(v=T0,col=3,lwd=4)
 p_val <- sum(T_stat>=T0)/B
 p_val  #0
 #we reject H0
-#LogY medio del gruppo 1 diverso da LogY medio del gruppo 3 con confidenza maggiore di 99%
-
+#Mean LogY of group 1 different from mean LogY of group 3 with confidence greater than 99%
 
 #TEST 2 vs 3
 
@@ -305,14 +304,16 @@ abline(v=T0,col=3,lwd=4)
 p_val <- sum(T_stat>=T0)/B
 p_val  #0
 #we reject H0
-#LogY medio del gruppo 2 diverso da LogY medio del gruppo 3 con confidenza maggiore di 99%
+#Mean LogY of group 2 different from mean LogY of group 3 with confidence greater than 99%
 
 
-#ripetendo il test per tutte le altre coppie di gruppi si ottiene sempre p-value 0
-#quindi LogY medio diverso tra tutti gli altri gruppi
+#repeating the test for all the other pairs of groups, p-value 0 is always obtained
+#therefore average LogY different among all other groups
 
-#In conclusione il LogY medio delle case a cui è stata data una medio-bassa valutazione (1) della visita e una media valutazione (2) della visita è uguale, ed è a sua volta diverso
-#dai logY medi delle case a cui è stata data una bassa valuazione (0) e un'alta valutazione (3,4) delle visite, che sono diversi anche tra loro
+# In conclusion, the average LogY of the houses that were given a medium-low evaluation (1) 
+#of the visit and an average evaluation (2) of the visit is the same, and is in turn different 
+#from the average logY of the houses to which it was given a low rating (0) and 
+#a high rating (3.4) of visits, which are also different from each other
 
 
 ############ Verify effect of condition on LogY ########################
@@ -393,7 +394,7 @@ abline(v=T0,col=3,lwd=4)
 p_val <- sum(T_stat>=T0)/B
 p_val  #0.261
 #we don't reject H0
-#LogY medio del gruppo 1 uguale a LogY medio del gruppo 2
+#Average LogY of group 1 equal to average LogY of group 2 
 
 
 #TEST 3 vs 4
@@ -427,14 +428,14 @@ abline(v=T0,col=3,lwd=4)
 p_val <- sum(T_stat>=T0)/B
 p_val  #0
 #we reject H0
-#LogY medio del gruppo 3 diverso da LogY medio del gruppo 4 con confidenza maggiore di 99%
+#Mean LogY of group 3 different from mean LogY of group 4 with confidence greater than 99%
 
+#repeating the test for all the other pairs of groups we obtain p-value 0 (sometimes 0.001) 
+#therefore different average LogY among all the other groups
 
-#ripetendo il test per tutte le altre coppie di gruppi si ottiene p-value 0 (a volte 0.001)
-#quindi LogY medio diverso tra tutti gli altri gruppi
-
-#In conclusione il LogY medio delle case in pessime condizioni (1) e in cattive condizioni (2) è uguale, ed è a sua volta diverso
-#dai logY medi delle case in condizioni normali (3), buone (4) e ottime (5), che sono diversi anche tra loro
+#In conclusion, the average LogY of houses in bad (1) and in bad (2) conditions is the same, 
+#and is in turn different from the average logY of houses in normal (3), good (4) and 
+#excellent (5) conditions. , which are also different from each other
 
 
 ################# Verify effect of has_bas on LogY #########################
@@ -560,9 +561,7 @@ p_val #0
 #we reject H0
 #factor new_grade has significantly effect on LogY
 
-#effettuando il test per tutte le coppie di gruppi si ottiene sempre p-value 0
-#quindi LogY medio diverso tra tutti i gruppi di new_grade
-
+#by carrying out the test for all the pairs of groups, p-value obtained is always 0, therefore the average LogY is different between all the groups of new_grade
 
 ################ Verify effect of 'Distance from the most southern point of Lake Union' on LogY ########################### --> Case sul Lake Union sono vicine a Seattle, capoluogo della Contea di King
 
@@ -619,8 +618,8 @@ p_val #0
 #we reject H0
 #factor dist has significantly effect on LogY
 
-#effettuando il test per tutte le coppie di gruppi si ottiene sempre p-value 0
-#quindi LogY medio diverso tra tutti i gruppi di dist
+#by carrying out the test for all the pairs of groups, p-value obtained is always 0, 
+#therefore the average LogY is different between all the groups of dist
 
 
 ############## Verify effect of Log_sqm_living on LogY ################################
@@ -678,8 +677,8 @@ p_val #0
 #we reject H0
 #factor sqm has significantly effect on LogY
 
-#effettuando il test per tutte le coppie di gruppi si ottiene sempre p-value 0
-#quindi LogY medio diverso tra tutti i gruppi di sqm
+#by carrying out the test for all the pairs of groups, p-value obtained is always 0, 
+#therefore the average LogY is different between all the groups of sqm
 
 
 ####################### Verify effect of Log_sqm_living15 on LogY ################################################
@@ -737,14 +736,173 @@ p_val #0
 #we reject H0
 #factor sqm15 has significantly effect on LogY
 
-#effettuando il test per tutte le coppie di gruppi si ottiene sempre p-value 0
-#quindi LogY medio diverso tra tutti i gruppi di sqm15
+#by carrying out the test for all the pairs of groups, p-value obtained is always 0, 
+#therefore the average LogY is different between all the groups of sqm15
 
-#Potevamo immaginarcelo in quanto avevamo trovato in un test precedente che Log_sqm_living si comporta come Log_sqm_living15 
-#quindi se il LogY delle case di piccole, medie e grandi dimensioni è diverso, allora anche il LogY delle case con i vicini di piccole,
-#medie e grandi dimensioni è diverso
+#We could have figured this out as we found in a previous test that Log_sqm_living behaves 
+#like Log_sqm_living15 so if the LogY of the small, medium and large sized houses is different,
+#then the LogY of the houses with small, medium and large sized neighbors is also different
+
+detach(D)
+df_clean=D
+attach(df_clean)
+
+####################Verify relation between condition and view########################
+#1)
+## Goal: to understand if low condition implies low view
+range(condition) # numeric varable between 1 and 5
+range(view) # numeric varable between 1 and 5
+viewtest=view+1 #same range variables
+
+set.seed(240279)
+B <- 10000
+
+t1=cbind(condition)
+t2=cbind(viewtest)
+p=1
+n1=length(t1)
+n2=n1
+n=n1+n2
+## Test: H0: condition=view  vs H1:condition!=view
+
+t1.mean <- colMeans(t1)
+t2.mean <- colMeans(t2)
+delta.0 <- 0
+diff <- t1-t2
+diff.mean <- colMeans(diff)
+
+T20 <- as.numeric((diff.mean-delta.0)  %*% (diff.mean-delta.0))
+
+T2 <- numeric(B)
 
 
+for(perm in 1:B)
+{
+  signs.perm <- rbinom(n1, 1, 0.5)*2 - 1
+  diff_perm <- diff * matrix(signs.perm,nrow=n1,ncol=p,byrow=FALSE)
+  diff.mean_perm <- colMeans(diff_perm)
+  T2[perm] <- as.numeric((diff.mean_perm-delta.0) %*% (diff.mean_perm-delta.0))
+}
+
+x11()
+hist(T2,xlim=range(c(T2,T20)),breaks=100)
+abline(v=T20,col=3,lwd=4)
+x11()
+plot(ecdf(T2))
+abline(v=T20,col=3,lwd=4)
+p_val <- sum(T2>=T20)/B
+p_val #0
+
+# We refuse H0
+# We can see that house condition and view has no correlation
+
+###################################Test about richness####################################################
+
+#Goal: To verify if the richer neighborhoods correspond to those where the houses cost more
 
 
+i1=which(df_clean$is_rich==0)  
+i2=which(df_clean$is_rich==1) 
+t1=cbind(df_clean$price[i1]) #not rich neighborhoods
+t2=cbind(df_clean$price[i2]) #rich neighborhoods
+n1 <- dim(t1)[1]
+n2 <- dim(t2)[1]
+n  <- n1 + n2
+t1.mean <- colMeans(t1)
+t2.mean <- colMeans(t2)
+
+#Test: H0:price houses of not rich neighborhoods=price houses of rich neighborhood vs H1=H0^c
+
+T20 <- as.numeric((t1.mean-t2.mean) %*% (t1.mean-t2.mean))
+T20
+
+B <- 10000
+T2 <- numeric(B)
+
+for(perm in 1:B){
+  # Random permutation of indexes
+  t_pooled <- rbind(t1,t2)
+  permutation <- sample(n)
+  t_perm <- t_pooled[permutation]
+  t1_perm <-cbind(t_perm[1:n1])
+  t2_perm <- cbind(t_perm[(n1+1):n])
+  
+  # Evaluation of the test statistic on permuted data
+  t1.mean_perm <- colMeans(t1_perm)
+  t2.mean_perm <- colMeans(t2_perm)
+  T2[perm]  <- (t1.mean_perm-t2.mean_perm) %*% (t1.mean_perm-t2.mean_perm) 
+}
+
+# plotting the permutational distribution under H0
+hist(T2,xlim=range(c(T2,T20)),breaks=1000)
+abline(v=T20,col=3,lwd=4)
+
+plot(ecdf(T2))
+abline(v=T20,col=3,lwd=4)
+
+# p-value
+p_val <- sum(T2>=T20)/B
+p_val    #pvalue=0
+
+
+### => the price of houses in wealthy neighborhoods is much higher than that 
+###    of houses in poor neighborhoods
+
+
+####################Correlation between geodist_index and log10price################
+
+B=1000
+plot(df_clean$geodist_index,df_clean$`log10(price)`)
+
+plot(df_clean$geodist_index,df_clean$`log10(price)`)
+#Already from the graph one could guess that the closer we are to the center (lower geodist),
+#the higher the prices will be
+
+#dataset division in 3 parts based on distance  (short,medium,long)
+i1=which(df_clean$geodist_index<10)
+i2=which(df_clean$geodist_index>10 & df_clean$geodist_index<20)
+i3=which(df_clean$geodist_index>=20)
+
+n1 <- length(i1)
+n2 <- length(i2)
+n3 <- length(i3)
+n  <- n1+n2+n3
+v=vector(mode = "logical", length = n)
+v[i1]="short"
+v[i2]="medium"
+v[i3]="long"
+v=as.factor(v)  #creation of the categorical variable that indicates the distance
+df_dis=cbind(df_clean,v)
+colnames(df_dis)[36]="distance"
+g <- nlevels(df_dis$distance)
+plot(df_dis$distance, df_dis$`log10(price)`, xlab='treat',col=rainbow(g),main='Original Data')
+
+fit <- aov(df_dis$`log10(price)` ~ df_dis$distance)
+summary(fit)
+
+T0 <- summary(fit)[[1]][1,4]
+T0
+
+T_stat <- numeric(B) 
+
+for(perm in 1:B){
+  # Permutation:
+  permutation <- sample(1:n)
+  log10price_perm <- df_dis$`log10(price)`[permutation]
+  fit_perm <- aov(log10price_perm ~ df_dis$distance)
+  
+  # Test statistic:
+  T_stat[perm] <- summary(fit_perm)[[1]][1,4]
+}
+
+hist(T_stat,xlim=range(c(T_stat,T0)),breaks=30)
+abline(v=T0,col=3,lwd=2)
+
+plot(ecdf(T_stat),xlim=c(-1,20))
+abline(v=T0,col=3,lwd=4)
+
+p_val <- sum(T_stat>=T0)/B
+p_val  #0
+
+# There is a significant correlation between price and geodist_index
 
