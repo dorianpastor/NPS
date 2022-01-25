@@ -181,6 +181,38 @@ summary(model)
 plot(model)
 
 ###################################################
+# "lat"
+###################################################
+col = "lat"
+plot(data.frame(x_train[col], y_train),pch=20,col="grey")
+abline(v=47.61)
+abline(v=47.50)
+abline(v=47.35)
+abline(v=47.3)
+abline(v=47.24)
+scatterplot(x=unlist(x_train[col]), y=y_train, xlab=col,ylab=target)
+cutlat = cut(lat, 
+    breaks = c(min(lat),47.24,47.30, 47.35,47.5,47.61,max(lat)),
+    include.lowest = T, right=F)
+modlat = lm(y_train~cutlat)
+
+###################################################
+# "sqm_above"
+###################################################
+col = "sqm_above"
+plot(data.frame(x_train[col], y_train),pch=20,col="grey")
+scatterplot(lat,y_train)
+mod = lm(y_train~I(sqm_above^(1/2)))
+plot_regr_2d(sqm_above, y_train, mod, col)
+
+###################################################
+# "zipcode"
+###################################################
+col = "zipcode"
+plot(data.frame(x_train[col], y_train),pch=20,col="grey")
+###################################################
+modz = lm(y_train~bs(zipcode, knots=6))
+plot_regr_2d(zipcode, y_train, modz, col)
 # Final model
 ###################################################
 selector = select_columns(useful_gen[c(-1,-3)],useful_age,useful_geo,useful_sqm)
