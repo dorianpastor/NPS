@@ -750,51 +750,15 @@ attach(df_clean)
 ####################Verify relation between condition and view########################
 #1)
 ## Goal: to understand if low condition implies low view
-range(condition) # numeric varable between 1 and 5
-range(view) # numeric varable between 1 and 5
-viewtest=view+1 #same range variables
+range(condition) # numeric variable between 1 and 5
+range(view) # numeric variable between 1 and 5
 
-set.seed(240279)
-B <- 10000
+#chi-square test of independence to determine if the two categorical variables are related
+chisq.test(condition, view)
+#p-value = 1.79e-08
 
-t1=cbind(condition)
-t2=cbind(viewtest)
-p=1
-n1=length(t1)
-n2=n1
-n=n1+n2
-## Test: H0: condition=view  vs H1:condition!=view
-
-t1.mean <- colMeans(t1)
-t2.mean <- colMeans(t2)
-delta.0 <- 0
-diff <- t1-t2
-diff.mean <- colMeans(diff)
-
-T20 <- as.numeric((diff.mean-delta.0)  %*% (diff.mean-delta.0))
-
-T2 <- numeric(B)
-
-
-for(perm in 1:B)
-{
-  signs.perm <- rbinom(n1, 1, 0.5)*2 - 1
-  diff_perm <- diff * matrix(signs.perm,nrow=n1,ncol=p,byrow=FALSE)
-  diff.mean_perm <- colMeans(diff_perm)
-  T2[perm] <- as.numeric((diff.mean_perm-delta.0) %*% (diff.mean_perm-delta.0))
-}
-
-x11()
-hist(T2,xlim=range(c(T2,T20)),breaks=100)
-abline(v=T20,col=3,lwd=4)
-x11()
-plot(ecdf(T2))
-abline(v=T20,col=3,lwd=4)
-p_val <- sum(T2>=T20)/B
-p_val #0
-
-# We refuse H0
-# We can see that house condition and view has no correlation
+# We can see that house condition and view has no correlation with a confidence level
+# higher than 99%
 
 ###################################Test about richness####################################################
 
@@ -848,61 +812,4 @@ p_val    #pvalue=0
 ### => the price of houses in wealthy neighborhoods is much higher than that 
 ###    of houses in poor neighborhoods
 
-
-####################Correlation between geodist_index and log10price################
-
-B=1000
-plot(df_clean$geodist_index,df_clean$`log10(price)`)
-
-plot(df_clean$geodist_index,df_clean$`log10(price)`)
-#Already from the graph one could guess that the closer we are to the center (lower geodist),
-#the higher the prices will be
-
-#dataset division in 3 parts based on distance  (short,medium,long)
-i1=which(df_clean$geodist_index<10)
-i2=which(df_clean$geodist_index>10 & df_clean$geodist_index<20)
-i3=which(df_clean$geodist_index>=20)
-
-n1 <- length(i1)
-n2 <- length(i2)
-n3 <- length(i3)
-n  <- n1+n2+n3
-v=vector(mode = "logical", length = n)
-v[i1]="short"
-v[i2]="medium"
-v[i3]="long"
-v=as.factor(v)  #creation of the categorical variable that indicates the distance
-df_dis=cbind(df_clean,v)
-colnames(df_dis)[36]="distance"
-g <- nlevels(df_dis$distance)
-plot(df_dis$distance, df_dis$`log10(price)`, xlab='treat',col=rainbow(g),main='Original Data')
-
-fit <- aov(df_dis$`log10(price)` ~ df_dis$distance)
-summary(fit)
-
-T0 <- summary(fit)[[1]][1,4]
-T0
-
-T_stat <- numeric(B) 
-
-for(perm in 1:B){
-  # Permutation:
-  permutation <- sample(1:n)
-  log10price_perm <- df_dis$`log10(price)`[permutation]
-  fit_perm <- aov(log10price_perm ~ df_dis$distance)
-  
-  # Test statistic:
-  T_stat[perm] <- summary(fit_perm)[[1]][1,4]
-}
-
-hist(T_stat,xlim=range(c(T_stat,T0)),breaks=30)
-abline(v=T0,col=3,lwd=2)
-
-plot(ecdf(T_stat),xlim=c(-1,20))
-abline(v=T0,col=3,lwd=4)
-
-p_val <- sum(T_stat>=T0)/B
-p_val  #0
-
-# There is a significant correlation between price and geodist_index
 
