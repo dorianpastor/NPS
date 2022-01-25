@@ -487,6 +487,108 @@ d=ncm_sort[ceiling((n/2 + 1)*(1-alpha))]
 matplot(cbind(mu,mu+d,mu-d),type='l')
 # FINE Conformal Prediction
 
+################################################################################
+# TENTATIVO FDA: andamento del prezzo al metro quadro per ogni zip per ognuno dei
+# primi 12 mesi. Alla fine si ottengono 4 plot degli andamenti per gli zip appartenenti
+# ad ognuno dei quattro cluster: MA e poi media + confidence interval?
+
+zipcode = factor(zipcode)
+nzips = length(levels(zipcode))
+table(zipcode)
+
+ll_meanzip = matrix(NA,nrow = nzips, ncol = 2)
+for (i in 1:nzips)
+  ll_meanzip[i,] = colMeans(cbind(long,lat)[which(zipcode==levels(zipcode)[i]),])
+
+plot(ll_meanzip)
+
+nmonths = 13
+
+month = numeric(n)
+for (i in 1:n) {
+  if(ord_date[i]<=31)
+    month[i] = 1
+  else if(ord_date[i]<=61)
+    month[i] = 2
+  else if(ord_date[i]<=92)
+    month[i] = 3
+  else if(ord_date[i]<=123)
+    month[i] = 4
+  else if(ord_date[i]<=153)
+    month[i] = 5
+  else if(ord_date[i]<=184)
+    month[i] = 6
+  else if(ord_date[i]<=214)
+    month[i] = 7
+  else if(ord_date[i]<=245)
+    month[i] = 8
+  else if(ord_date[i]<=276)
+    month[i] = 9
+  else if(ord_date[i]<=304)
+    month[i] = 10
+  else if(ord_date[i]<=335)
+    month[i] = 11
+  else if(ord_date[i]<=365)
+    month[i] = 12
+  else if(ord_date[i]<=396)
+    month[i] = 13
+}
+
+zip = numeric(n)
+for (i in 1:n) {
+  found = FALSE
+  z = 1
+  while(!found){
+    if(zipcode[i]==levels(zipcode)[z]){
+      zip[i] = z
+      found = TRUE
+    }
+    z =z+1
+  }
+}
+
+psr_month_zip_mean = matrix(0, nrow = nmonths, ncol = nzips)
+counter_months = matrix(0, nrow = nmonths, ncol = nzips)
+for (i in 1:n)
+  counter_months[month[i],zip[i]] = counter_months[month[i],zip[i]] + 1
+matplot(counter_months,type="l")
+lines(1:13,rep(0,13))
+
+# eliminiamo l'ultimo mese:
+
+matplot(counter_months[-13,],type="l")
+which(counter_months[-13]==0)
+
+for(i in 1:n)
+  psr_month_zip_mean[month[i],zip[i]] = psr_month_zip_mean[month[i],zip[i]] + psr[i]
+
+psr_mz_mean = psr_month_zip_mean/counter_months
+which(psr_mz_mean[-13,] == 'NaN')
+
+# correzione dei NaN attraverso osservazione appena prima precedente e post:
+psr_mz_mean[-13,] == 'NaN' # psr_mz_mean[10,15], psr_mz_mean[8,25], psr_mz_mean[9,25]
+
+psr_mz_mean[10,15] = (psr_mz_mean[9,15]+psr_mz_mean[11,15])/2
+psr_mz_mean[8,25] = (2*psr_mz_mean[7,15]+psr_mz_mean[10,25])/3
+psr_mz_mean[9,25] = (psr_mz_mean[7,15]+2*psr_mz_mean[10,25])/3
+
+matplot(psr_mz_mean[-13,],type='l')
+x11()
+
+# cluster delle zip:
+
+clust = kmeans(ll_meanzip, centers = 4 ,nstart=10)
+clust$iter
+clust$size
+sum(clust$size)
+
+names(clust)
+clust$cluster
+
+matplot(psr_mz_mean[-13,which(clust$cluster==1)],type = 'l')
+matplot(psr_mz_mean[-13,which(clust$cluster==2)],type = 'l')
+matplot(psr_mz_mean[-13,which(clust$cluster==3)],type = 'l')
+matplot(psr_mz_mean[-13,which(clust$cluster==4)],type = 'l')
 
 # EVITEREI QUESTI METODI
 # smoothing utilizzando FDA methods:
