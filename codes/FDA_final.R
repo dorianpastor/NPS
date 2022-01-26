@@ -162,7 +162,7 @@ for (i in 1:n){
   j = 1
   while (!found){
     if (zipcode[i] == levels(zipcode)[j]){
-      zip_clust[i] = result.k$cluster[j]
+      zip_clust[i] = clust$cluster[j]
       found = TRUE
     }
     j = j + 1
