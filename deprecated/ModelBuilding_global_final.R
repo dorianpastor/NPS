@@ -35,8 +35,7 @@ plot(model)
 plot_regr_2d(bathfloors_ratio, y_train, model, col)
 # Option 1 - natural spline 2 - BEST (degree 2 because it's monotone)
 model_ns = lm(y_train ~ ns(bathfloors_ratio, df=2), data=x_train) # note: != poly(degree=2)
-effect_plot(model_ns, pred = bathfloors_ratio, interval = TRUE, rug=TRUE,
-            plot.points = TRUE)
+effect_plot(model_ns, pred = bathfloors_ratio, interval = TRUE, plot.points = TRUE)
 # Option 2 - step
 model_cut = lm(y_train ~ cut(bathfloors_ratio, 
                                   breaks = c(min(bathfloors_ratio),2,max(bathfloors_ratio))))
@@ -83,6 +82,7 @@ plot(data.frame(x_train[col], y_train), pch=20)
 scatterplot(x=unlist(x_train[col]), y=y_train, xlab=col,ylab=target)
 model = lm(y_train~grade)
 plot(model)
+effect_plot(model, pred = grade, interval = TRUE, plot.points = TRUE)
 ###################################################
 # "renovate_index"
 ###################################################
@@ -97,6 +97,7 @@ cutoff = 80
 cutl <- (renovate_index-cutoff)*(renovate_index>cutoff)
 model_cut2 = lm(y_train ~ renovate_index + cutl ) #+ I(renovate_index>cutoff)
 summary(model_cut2)
+col = "yr_old"
 plot_regr_2d(renovate_index, y_train, model_cut2, col, "linstep", cutoff)  
 # Option 3
 model = lm(y_train~I(renovate_index<cutoff))
@@ -126,9 +127,12 @@ summary(model)
 model2 = lm(y_train ~ has_ren*renovate_index)
 summary(model2)
 # Option 3 - BEST, we model the age of the house and add a bonus to the renovated
-model3 = lm(y_train ~ I((yr_old-80)*(yr_old>80))
-           + yr_old:has_ren)
+yr_old_ = I((yr_old-80)*(yr_old>80))
+model3 = lm(y_train ~ yr_old_
+            + yr_old:has_ren, data=x_train)
 summary(model3)
+effect_plot(model3, pred = yr_old_, interval = TRUE, plot.points = TRUE, col.lab="red",
+            cat.geom = "line")
 ###################################################
 # "geodist_index"
 ###################################################
@@ -145,10 +149,10 @@ model_cut2 = lm(y_train ~ geodist_index+cutl)
 summary(model_cut2)
 plot_regr_2d(geodist_index, y_train, model_cut2, col, "linstep", cutoff) 
 # Option 3 - good, equivalent
-model = lm(y_train ~ bs(geodist_index, degree=2))
+model = lm(y_train ~ bs(geodist_index, degree=2), data=x_train)
 summary(model)
 plot_regr_2d(geodist_index, y_train, model, col)
-
+effect_plot(model, pred = geodist_index, interval = TRUE, plot.points = TRUE, point.color="grey")
 ###################################################
 # "log10.sqm_living."
 ###################################################
@@ -157,6 +161,8 @@ plot(data.frame(x_train[col], y_train),pch=20)
 scatterplot(x=unlist(x_train[col]), y=y_train, xlab=col,ylab=target)
 model = lm(y_train ~log10.sqm_living.)
 plot(model)
+effect_plot(model, pred = log10.sqm_living., interval = TRUE, plot.points = TRUE, point.color="grey")
+
 ###################################################
 # "log10.sqm_lot."
 ###################################################
@@ -165,6 +171,8 @@ plot(data.frame(x_train[col], y_train),pch=20)
 scatterplot(x=unlist(x_train[col]), y=y_train, xlab=col,ylab=target)
 model = lm(y_train ~log10.sqm_lot.)
 plot(model)
+effect_plot(model, pred = log10.sqm_lot., interval = TRUE, plot.points = TRUE, point.color="grey")
+
 ###################################################
 # "log10.sqm_living15."
 ###################################################
@@ -174,6 +182,8 @@ scatterplot(x=unlist(x_train[col]), y=y_train, xlab=col,ylab=target)
 model = lm(y_train ~log10.sqm_living15.)
 summary(model)
 plot(model)
+effect_plot(model, pred = log10.sqm_living15., interval = TRUE, plot.points = TRUE, point.color="grey")
+
 ###################################################
 # "log10.sqm_lot15."
 ###################################################
@@ -199,6 +209,7 @@ cutlat = cut(lat,
     breaks = c(min(lat),47.24,47.30, 47.35,47.5,47.61,max(lat)),
     include.lowest = T, right=F)
 modlat = lm(y_train~cutlat)
+effect_plot(modlat, pred = cutlat, interval = TRUE, plot.points = TRUE)
 
 ###################################################
 # "sqm_above"
@@ -206,17 +217,21 @@ modlat = lm(y_train~cutlat)
 col = "sqm_above"
 plot(data.frame(x_train[col], y_train),pch=20,col="grey")
 scatterplot(lat,y_train)
-mod = lm(y_train~I(sqm_above^(1/2)))
-plot_regr_2d(sqm_above, y_train, mod, col)
+mod = lm(y_train~sqm_above)
+effect_plot(mod, pred = sqm_above, interval = TRUE, plot.points = TRUE, point.color="grey")
+
+mod = lm(y_train~is_rich)
+effect_plot(mod, pred = is_rich, interval = TRUE, plot.points = TRUE)
+
 
 ###################################################
 # "zipcode"
 ###################################################
 col = "zipcode"
 plot(data.frame(x_train[col], y_train),pch=20,col="grey")
-###################################################
 modz = lm(y_train~bs(zipcode, knots=6))
 plot_regr_2d(zipcode, y_train, modz, col)
+###################################################
 # Final model
 ###################################################
 selector = select_columns(useful_gen[c(-1,-3)],useful_age,useful_geo,useful_sqm)
@@ -229,7 +244,7 @@ model_final = lmrob(y_train~ns(bathfloors_ratio, df=2)+
                    log10.sqm_living. +
                    log10.sqm_lot.+
                    log10.sqm_living15.+
-                   log10.sqm_lot15.
+                   +sqm_above + lat
                  ,data=X1
                  )  # Using lmrob's MM-type estimator for lm
 summary(model_final)
