@@ -1,4 +1,5 @@
 library(car)
+library(jtools)
 
 plot_regr_2d <- function(x, y, model, xname, option="",cutoff=0){
   x.grid=seq(range(x)[1],range(x)[2],length.out=1000)
@@ -33,8 +34,9 @@ model = gam(y_train ~ s(bathfloors_ratio, bs="cr"))
 plot(model)
 plot_regr_2d(bathfloors_ratio, y_train, model, col)
 # Option 1 - natural spline 2 - BEST (degree 2 because it's monotone)
-model_gam_ns = lm(y_train ~ ns(bathfloors_ratio, df=2)) # note: != poly(degree=2)
-plot_regr_2d(bathfloors_ratio, y_train, model_gam_ns, col)
+model_ns = lm(y_train ~ ns(bathfloors_ratio, df=2), data=x_train) # note: != poly(degree=2)
+effect_plot(model_ns, pred = bathfloors_ratio, interval = TRUE, rug=TRUE,
+            plot.points = TRUE)
 # Option 2 - step
 model_cut = lm(y_train ~ cut(bathfloors_ratio, 
                                   breaks = c(min(bathfloors_ratio),2,max(bathfloors_ratio))))
@@ -51,6 +53,7 @@ plot(data.frame(x_train[col], y_train), pch=20)
 scatterplot(x=unlist(x_train[col]), y=y_train, xlab=col,ylab=target)
 model = lm(y_train~view)
 plot(model)
+effect_plot(model, pred = view, interval = TRUE, plot.points = TRUE)
 ###################################################
 # "condition"
 ###################################################
@@ -58,11 +61,12 @@ col = "condition"
 plot(data.frame(x_train[col], y_train), pch=20)
 scatterplot(x=unlist(x_train[col]), y=y_train, xlab=col,ylab=target)
 # Option 1
-model_cut = lm(y_train ~ cut(condition, 
-                             breaks = c(min(condition),3,max(condition)),
-                             include.lowest = T, right=F))
+condition_ = cut(condition, 
+                 breaks = c(min(condition),3,max(condition)),
+                 include.lowest = T, right=F)
+model_cut = lm(y_train ~ condition_)
 summary(model_cut)
-plot_regr_2d(condition, y_train, model_cut, col)
+effect_plot(model_cut, pred = condition_, interval = TRUE, plot.points = TRUE)
 # Option 2
 cutoff = 1
 cutl <- (condition-cutoff)*(condition>cutoff)

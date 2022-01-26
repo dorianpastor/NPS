@@ -293,9 +293,9 @@ min(sorted_by_price[1:6*groupsize]) # have 1M, last 6 buckets
 ###################################################################################################################################################################################
 # Model for expensive properties
 ###################################################################################################################################################################################
-
-X2 = X1[which(y_train>=log10(1000000)),] ; x_test_2 = x_test_1[which(y_test>=log10(1000000)),]
-y_train_2 = y_train[which(y_train>=log10(1000000))]; y_test_2 = y_test[which(y_test>=log10(1000000))]
+threshold = 1000000
+X2 = X1[which(y_train>=log10(threshold)),] ; x_test_2 = x_test_1[which(y_test>=log10(threshold)),]
+y_train_2 = y_train[which(y_train>=log10(threshold))]; y_test_2 = y_test[which(y_test>=log10(threshold))]
 model_expensive = lmrob(y_train_2~ns(bathfloors_ratio, df=2)+
                       view + grade +
                       bs(geodist_index, degree=2) +   
@@ -312,8 +312,8 @@ mape_exp = eval_regr(model_expensive,x_test_2,y_test_2, "mape")
 # Model for standard properties
 ###################################################################################################################################################################################
 
-X0 = X1[which(y_train<log10(1000000)),] ; x_test_0 = x_test_1[which(y_test<log10(1000000)),]
-y_train_0 = y_train[which(y_train<log10(1000000))]; y_test_0 = y_test[which(y_test<log10(1000000))]
+X0 = X1[which(y_train<log10(threshold)),] ; x_test_0 = x_test_1[which(y_test<log10(threshold)),]
+y_train_0 = y_train[which(y_train<log10(threshold))]; y_test_0 = y_test[which(y_test<log10(threshold))]
 model_standard = lmrob(y_train_0~ns(bathfloors_ratio, df=2)+
                       view + grade +
                       cut(condition,breaks = c(min(condition),3,max(condition)),include.lowest = T, right=F)+
