@@ -590,19 +590,25 @@ matplot(psr_mz_mean[-13,which(clust$cluster==2)],type = 'l')
 matplot(psr_mz_mean[-13,which(clust$cluster==3)],type = 'l')
 matplot(psr_mz_mean[-13,which(clust$cluster==4)],type = 'l')
 
-# EVITEREI QUESTI METODI
-# smoothing utilizzando FDA methods:
-library(fda)
-library(fields)
+p_val = numeric()
+B=1000
+for(i in 1:3)
+  for(j in (i+1):4){
+    tot = rbind(t(psr_mz_mean[-13,which(clust$cluster==i)]),t(psr_mz_mean[-13,which(clust$cluster==j)]))
+    n_1=clust$size[i]
+    n_2=clust$size[j]
+    nr = nrow(tot)
+    meandiff=(colMeans(t(psr_mz_mean[-13,which(clust$cluster==i)]))-colMeans(t(psr_mz_mean[-13,which(clust$cluster==j)])))
+    T0=sum(meandiff^2)
+    T0_perm=numeric(B)
+    for(perm in 1:B){
+      permutazione <- sample(nr)
+      tot_perm=tot[permutazione,]
+      perm_1 = tot_perm[1:n_1,] 
+      perm_2 = tot_perm[(n_1+1):nr,] 
+      T0_perm[perm]=sum(((colMeans(perm_1)-colMeans(perm_2)))^2)
+    }
+    p_val = c(p_val,sum(T0_perm >= T0)/B)
+  }
 
-n = dim(price_sqm_weekly_zip_mean_no_last)[1]
-N = dim(price_sqm_weekly_zip_mean_no_last)[2]
-time = 1:n	# ed eventuali modifiche rispetto allo step temporale
-matplot(price_sqm_weekly_zip_mean_no_last, type = 'l', main = 'p-w-lin', xlab = 'weeks', ylab = 'mean price/surf')
-
-basis= create.bspline.basis(rangeval = c(1,n), nbasis = 13)	# nbasis 
-
-data_fd = Data2fd(y = price_sqm_weekly_zip_mean_no_last, argvals = time, basisobj = basis)	# rangeval segue le eventuali modifiche di time
-plot.fd(data_fd, main="B-splines", xlab = 'weeks', ylab = 'mean price/surf')
-title("smooth")
-lines(mean.fd(data_fd),lwd=2)		# media
+# no statistical evidence for saying SW-NE are different!
