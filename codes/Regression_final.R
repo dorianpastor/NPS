@@ -115,7 +115,7 @@ useful_sqm = c("log10.sqm_living.","log10.sqm_lot.","log10.sqm_living15.",
 # Final NonParametric Regression Model
 #############################################################################
 
-selector = select_columns(useful_gen[c(-1,-3)],useful_age,useful_geo,useful_sqm,"sqm_basement","zipcode", "lat","sqm_above")
+selector = select_columns(useful_gen[c(-1,-3)],useful_age,useful_geo,useful_sqm,"sqm_basement","lat","sqm_above")
 X1 = selector$x_train; x_test_1 = selector$x_test
 model_final = lmrob(y_train~ns(bathfloors_ratio, df=2)+
                       view + grade +
@@ -129,8 +129,7 @@ model_final = lmrob(y_train~ns(bathfloors_ratio, df=2)+
                       cut(lat, 
                           breaks = c(min(lat),47.24,47.30, 47.35,47.5,47.61,max(lat)),
                           include.lowest = T, right=F)+
-                      sqm_above+
-                      zipcode
+                      sqm_above
                     ,data=X1)  # Using lmrob's MM-type estimator for lm
 summary(model_final)
 plot(model_final)
@@ -142,7 +141,7 @@ plot(model_final)
 ###################################################################################################################################################################################
 
 linmod <- lm(y_train ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
-               log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above + zipcode, data=X1)
+               log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above, data=X1)
 summary(linmod)
 
 ###################################################################################################################################################################################
@@ -159,7 +158,7 @@ for(perm in 1:B){
   permutazione <- sample(n)
   Y.perm.glob <- y_train[permutazione]
   T_H0glob[perm] <- summary(lm(Y.perm.glob ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
-                                 log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above + zipcode, data=X1))$f[1]
+                                 log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above, data=X1))$f[1]
 }
 p_val <- sum(T_H0glob>=T0_glob)/B
 p_val #0
@@ -172,7 +171,7 @@ p_val #0
 T0_x1 <- abs(summary(linmod)$coefficients[9,3])
 T0_x1
 regr.H01 <- lm(y_train ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
-                 log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above + zipcode, data=X1)
+                 log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above, data=X1)
 residui.H01 <- regr.H01$residuals
 T_H01 <- numeric(B)
 for(perm in 1:B){
@@ -180,7 +179,7 @@ for(perm in 1:B){
   residui.H01.perm <- residui.H01[permutazione]
   Y.perm.H01 <- regr.H01$fitted + residui.H01.perm
   T_H01[perm] <- abs(summary(lm(Y.perm.H01 ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
-                                  log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above + zipcode, data=X1))$coefficients[9,3])
+                                  log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above, data=X1))$coefficients[9,3])
 }
 p_val <- sum(T_H01>=T0_x1)/B
 p_val #0
@@ -191,7 +190,7 @@ p_val #0
 T0_x2 <- abs(summary(linmod)$coefficients[2,3])
 T0_x2
 regr.H02 <- lm(y_train ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
-                 log10.sqm_living. + log10.sqm_lot.+ log10.sqm_living15. + is_rich + lat + sqm_above + zipcode, data=X1)
+                 log10.sqm_living. + log10.sqm_lot.+ log10.sqm_living15. + is_rich + lat + sqm_above, data=X1)
 residui.H02 <- regr.H02$residuals
 T_H02 <- numeric(B)
 for(perm in 1:B){
@@ -199,14 +198,14 @@ for(perm in 1:B){
   residui.H02.perm <- residui.H02[permutazione]
   Y.perm.H02 <- regr.H02$fitted + residui.H02.perm
   T_H02[perm] <- abs(summary(lm(Y.perm.H02 ~ bathfloors_ratio + view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
-                                  log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above + zipcode, data=X1))$coefficients[2,3])
+                                  log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above, data=X1))$coefficients[2,3])
 }
 p_val <- sum(T_H02>=T0_x2)/B
 p_val #0.052
 
 # The model is adjusted accordingly
 linmod <- lm(y_train ~ view + grade + condition + yr_old + yr_old:has_ren + geodist_index +
-               log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above + zipcode, data=X1)
+               log10.sqm_living. + log10.sqm_lot. + log10.sqm_living15. + is_rich + lat + sqm_above, data=X1)
 summary(linmod)
 plot(linmod)
 
@@ -303,7 +302,7 @@ model_expensive = lmrob(y_train_2~ns(bathfloors_ratio, df=2)+
                       bs(log10.sqm_living., degree=2) + 
                       bs(log10.sqm_lot., degree=2) +   
                       log10.sqm_living15.+             
-                      ns(log10.sqm_lot15., df=2) + lat + zipcode + sqm_above
+                      ns(log10.sqm_lot15., df=2) + lat + sqm_above
                     , data=X2
 ) 
 mae_exp = eval_regr(model_expensive,x_test_2,y_test_2, "mae")
@@ -326,8 +325,7 @@ model_standard = lmrob(y_train_0~ns(bathfloors_ratio, df=2)+
                       is_rich+cut(lat, 
                                   breaks = c(min(lat),47.24,47.30, 47.35,47.5,47.61,max(lat)),
                                   include.lowest = T, right=F)+
-                        sqm_above+
-                        zipcode
+                        sqm_above
                     ,data=X0) 
 mae_st = eval_regr(model_standard,x_test_0,y_test_0, "mae")
 mape_st = eval_regr(model_standard,x_test_0,y_test_0, "mape")
